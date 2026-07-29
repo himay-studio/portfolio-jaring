@@ -13,8 +13,8 @@ Merek ini fiktif dan dibuat sebagai contoh pekerjaan. Tidak ada backend, tidak a
 | Stage | Pekerjaan | Status |
 | --- | --- | --- |
 | 1 | Brand Strategist, brand dan sistem desain | Selesai |
-| 2 | Asset Forge, logo dan favicon | Belum |
-| 3 | Webapp Architect, arsitektur, scaffold, semua layar layout-first | Belum |
+| 2 | Asset Forge, logo dan favicon | Selesai |
+| 3 | Webapp Architect, arsitektur, scaffold, semua layar layout-first | Selesai |
 | 4 | Media Producer, aset gambar | Belum |
 | 5 | Frontend Builder, implementasi penuh dan data demo | Belum |
 | 6 | QA Deploy Engineer | Belum |
@@ -33,6 +33,8 @@ Baca berurutan sebelum menyentuh kode.
 | `DESIGN.md` | Token warna lengkap dengan **angka kontras terhitung**, tipografi, skala padat data, tata letak, aturan komponen, gerak |
 | `ART-DIRECTION.md` | Konsep logo, dua varian wajib, ikonografi, daftar aset, bahasa visual di dalam aplikasi |
 | `LOGO.md` | Prompt logo siap tempel, instruksi favicon, tutorial Google Flow |
+| `LAYOUT-ARCHITECTURE.md` | Peta rute, hierarki komponen, keputusan arsitektur beserta alasannya, batas R48, hasil pengukuran |
+| `MEDIA.md` | Manifest media. Kosong dengan sengaja, aplikasi ini tidak bergantung pada gambar hasil generate |
 
 Aturan tiga baris untuk siapa pun yang melanjutkan:
 
@@ -57,11 +59,37 @@ Tahap pipeline: Prospek, Kualifikasi, Penawaran, Negosiasi, Menang, Kalah.
 
 ---
 
-## Rencana teknis
+## Menjalankan
 
-- Next.js dengan `output: 'export'`, static export tanpa backend.
-- Data demo statis di `src/data/*.ts`, mutasi demo disimpan di `localStorage`.
-- Font Plus Jakarta Sans dan Inter lewat `next/font`.
+```bash
+npm install
+npm run dev          # http://localhost:3000
+npm run build        # rm -rf out .next lalu next build, hasilnya di out/
+npm run typecheck    # tsc --noEmit
+```
+
+Pemeriksa aturan terukur, dijalankan di browser sungguhan:
+
+```bash
+npm install --no-save playwright-core
+npm run build
+npx serve out -l 4173 &
+node scripts/qa-check.mjs http://localhost:4173
+```
+
+Skrip itu mengukur luapan mendatar di 375, 480, 768, 1025, dan 1440 dengan
+panel tertutup maupun terbuka, membaca `innerText` per baris untuk teks yang
+menempel, mencari em dash dan en dash pada teks ter-render, mencocokkan
+`aria-expanded` dengan geometri panel yang sebenarnya, dan mengukur laci mobile
+dari kotaknya. Penjelasan tiap pemeriksaan ada di kepala berkasnya.
+
+## Teknis
+
+- Next.js dengan `output: 'export'`, static export tanpa backend. 83 halaman.
+- Data demo statis di `src/data/*.ts`, mutasi demo disimpan di `localStorage`
+  sebagai lapisan timpa di atas data dasar.
+- Font Plus Jakarta Sans, Inter, dan JetBrains Mono lewat `next/font`, di-host
+  sendiri, tanpa permintaan ke domain pihak ketiga.
 - Login demo, kredensial ditampilkan di layar, satu klik masuk.
 - Deploy ke Cloudflare Pages project `himaystudio-portfolio-jaring`.
 - URL publik: `https://portfolio-jaring.himaystudio.com`. URL `pages.dev` hanya cadangan internal dan tidak pernah dilaporkan sebagai URL publik.

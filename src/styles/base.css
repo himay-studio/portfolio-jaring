@@ -1,0 +1,298 @@
+/* ==========================================================================
+   Reset, dasar dokumen, tipografi, dan utilitas.
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  border-radius: 0; /* R10, sudut siku total tanpa pengecualian */
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 22px;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  /* Menahan overflow mendatar dari panel apa pun yang meleset (R19, R57).
+     Ini jaring pengaman, bukan pengganti geometri panel yang benar. */
+  overflow-x: hidden;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+a {
+  color: var(--brand);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+/* Cincin fokus terlihat di setiap elemen yang bisa difokus (DESIGN.md 8.3) */
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.on-ink :focus-visible {
+  outline-color: var(--brand-bright); /* 6.57:1 di atas --ink */
+}
+
+::selection {
+  background: var(--brand-soft);
+  color: var(--brand-ink);
+}
+
+/* --------------------------------------------------------------------------
+   Skala tipografi, DESIGN.md 4.1 dan 4.2
+   -------------------------------------------------------------------------- */
+
+.t-display {
+  font-family: var(--font-display);
+  font-size: 32px;
+  line-height: 40px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.t-h1 {
+  font-family: var(--font-display);
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.t-h2 {
+  font-family: var(--font-display);
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 700;
+}
+
+.t-h3 {
+  font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 600;
+}
+
+.t-body {
+  font-size: 14px;
+  line-height: 22px;
+  font-weight: 400;
+}
+
+.t-body-strong {
+  font-size: 14px;
+  line-height: 22px;
+  font-weight: 600;
+}
+
+.t-sm {
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 400;
+}
+
+.t-xs {
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 400;
+}
+
+.t-table {
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 400;
+}
+
+.t-table-key {
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 600;
+}
+
+.t-table-head,
+.t-label {
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.t-badge {
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 600;
+}
+
+.t-metric {
+  font-family: var(--font-display);
+  font-size: 28px;
+  line-height: 34px;
+  font-weight: 700;
+}
+
+.t-metric-sm {
+  font-family: var(--font-display);
+  font-size: 20px;
+  line-height: 26px;
+  font-weight: 700;
+}
+
+.t-chart {
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 500;
+}
+
+/* WAJIB pada setiap sel angka, nilai KPI, dan sumbu grafik (DESIGN.md 4) */
+.num,
+.t-metric,
+.t-metric-sm,
+.t-chart {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+.num {
+  text-align: right;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   Utilitas kecil
+   -------------------------------------------------------------------------- */
+
+.muted {
+  color: var(--text-muted);
+}
+
+.subtle {
+  color: var(--text-subtle);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+}
+
+.wrap {
+  flex-wrap: wrap;
+}
+
+.gap-4 { gap: 4px; }
+.gap-8 { gap: 8px; }
+.gap-12 { gap: 12px; }
+.gap-16 { gap: 16px; }
+.gap-24 { gap: 24px; }
+
+.grow { flex: 1 1 auto; min-width: 0; }
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* R50, judul dan label sekunder WAJIB elemen blok terpisah dengan gap.
+   Bukan dua span sebaris yang menempel jadi "Persalinan NormalPersalinan".
+   Verifikasi dengan innerText per baris, bukan textContent. */
+.titled {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.titled > * {
+  display: block;
+}
+
+/* --------------------------------------------------------------------------
+   Gerak, DESIGN.md bagian 7 dan R46
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Pengenal kode di dalam prosa. Dipakai blok anotasi Stage 3. */
+code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  background: var(--surface-3);
+  padding: 0 4px;
+}

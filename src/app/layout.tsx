@@ -1,0 +1,85 @@
+import type { Metadata, Viewport } from 'next';
+import { Inter, JetBrains_Mono, Plus_Jakarta_Sans } from 'next/font/google';
+import './globals.css';
+
+/* ==========================================================================
+   Layout root.
+
+   Tipografi dikunci di DESIGN.md bagian 4: Plus Jakarta Sans untuk judul dan
+   angka besar, Inter untuk isi dan tabel, JetBrains Mono untuk nomor dokumen.
+   Ketiganya dimuat lewat next/font supaya di-host sendiri, jadi tidak ada
+   permintaan ke domain pihak ketiga saat halaman dibuka.
+   ========================================================================== */
+
+const display = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  weight: ['600', '700', '800'],
+  variable: '--font-display',
+  display: 'swap',
+});
+
+const ui = Inter({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  variable: '--font-ui',
+  display: 'swap',
+});
+
+const mono = JetBrains_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500'],
+  variable: '--font-mono',
+  display: 'swap',
+});
+
+/* Meta persis seperti yang dikunci BRAND.md bagian 9. */
+export const metadata: Metadata = {
+  metadataBase: new URL('https://portfolio-jaring.himaystudio.com'),
+  title: 'Jaring, CRM Pipeline Penjualan. Portfolio App by Himay Studio',
+  description:
+    'Demo aplikasi CRM pipeline penjualan Jaring. Kelola lead, deal, aktivitas follow up, dan laporan sales. Dibuat oleh Himay Studio.',
+  applicationName: 'Jaring',
+  /* Merek fiktif untuk demo, jadi canonical mandiri ke subdomain portfolio
+     sendiri, bukan ke domain klien mana pun (BRAND.md 9). */
+  alternates: { canonical: 'https://portfolio-jaring.himaystudio.com/' },
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon-32.png', type: 'image/png', sizes: '32x32' },
+      { url: '/favicon-16.png', type: 'image/png', sizes: '16x16' },
+    ],
+    apple: '/apple-touch-icon.png',
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'id_ID',
+    siteName: 'Jaring',
+    title: 'Jaring, CRM Pipeline Penjualan. Portfolio App by Himay Studio',
+    description:
+      'Demo aplikasi CRM pipeline penjualan Jaring. Kelola lead, deal, aktivitas follow up, dan laporan sales. Dibuat oleh Himay Studio.',
+    url: 'https://portfolio-jaring.himaystudio.com/',
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#0D2229',
+  width: 'device-width',
+  initialScale: 1,
+};
+
+/* Status lipat sidebar dibaca SEBELUM React hidrasi, lalu dipasang sebagai
+   atribut di <html>. Kalau dibaca lewat useEffect biasa, sidebar akan lahir
+   selebar 248px lalu menyusut jadi 64px di frame berikutnya, dan seluruh isi
+   halaman ikut melompat. */
+const SKRIP_SIDEBAR = `try{var r=localStorage.getItem('jaring.sidebar.rail');document.documentElement.dataset.sidebar=r==='1'?'rail':'penuh'}catch(e){document.documentElement.dataset.sidebar='penuh'}`;
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="id" data-sidebar="penuh">
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: SKRIP_SIDEBAR }} />
+      </head>
+      <body className={`${display.variable} ${ui.variable} ${mono.variable}`}>{children}</body>
+    </html>
+  );
+}

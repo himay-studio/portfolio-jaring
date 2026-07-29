@@ -1,0 +1,414 @@
+/* ==========================================================================
+   Shell aplikasi: sidebar kiri, topbar, kanvas isi.
+   Ukuran diambil dari DESIGN.md 5.3, titik henti dari 5.4.
+   ========================================================================== */
+
+.shell {
+  display: flex;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* --------------------------------------------------------------------------
+   Sidebar kiri, wajib dan persisten (standar aplikasi Himay Studio bagian 1)
+   -------------------------------------------------------------------------- */
+
+.sidebar {
+  flex: 0 0 auto;
+  width: var(--sidebar-w);
+  background: var(--ink);
+  color: var(--ink-text);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100dvh;
+  border-right: 1px solid var(--ink-border);
+  transition: width var(--d-sidebar) var(--ease);
+  /* TIDAK ada backdrop-filter, filter, atau transform di sini.
+     Ancestor semacam itu jadi containing block untuk position:fixed dan
+     membuat laci mobile kolaps setinggi header (R53). */
+}
+
+html[data-sidebar='rail'] .sidebar {
+  width: var(--sidebar-w-rail);
+}
+
+.sidebar-head {
+  height: var(--topbar-h);
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  background: var(--ink-2);
+  border-bottom: 1px solid var(--ink-border);
+}
+
+.sidebar-nav {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px 0 16px;
+}
+
+.nav-group + .nav-group {
+  margin-top: 4px;
+}
+
+.nav-group-label {
+  color: var(--ink-text-muted); /* 7.75:1 di atas --ink */
+  padding: 12px 16px 6px 19px;
+  white-space: nowrap;
+}
+
+html[data-sidebar='rail'] .nav-group-label {
+  /* Rail 64px tidak muat label grup. Diganti garis pemisah supaya
+     pengelompokan tetap terbaca sebagai struktur. */
+  height: 1px;
+  padding: 0;
+  margin: 10px 12px;
+  overflow: hidden;
+  background: var(--ink-border);
+  color: transparent;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 44px; /* tap target 44px (DESIGN.md 8.9) */
+  padding: 0 16px 0 13px;
+  border-left: 3px solid transparent;
+  color: var(--ink-text);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background var(--d-hover) ease-out;
+}
+
+.nav-item:hover {
+  background: var(--ink-2);
+  text-decoration: none;
+}
+
+/* Penanda aktif TIDAK boleh mengandalkan warna latar saja (DESIGN.md 3.4).
+   Tiga penanda sekaligus: batang tepi kiri 3px, latar --ink-3, teks penuh
+   --ink-text (9.62:1), ditambah aria-current="page" di markup. */
+.nav-item[aria-current='page'] {
+  background: var(--ink-3);
+  border-left-color: var(--brand-bright);
+  font-weight: 600;
+}
+
+.nav-item[aria-current='page'] .nav-icon {
+  color: var(--ink-text);
+}
+
+.nav-icon {
+  flex: 0 0 auto;
+  color: var(--ink-text-muted);
+  transition: color var(--d-hover) ease-out;
+}
+
+.nav-item:hover .nav-icon {
+  color: var(--ink-text);
+}
+
+.nav-label {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nav-count {
+  flex: 0 0 auto;
+  color: var(--ink-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+html[data-sidebar='rail'] .nav-label,
+html[data-sidebar='rail'] .nav-count {
+  display: none;
+}
+
+html[data-sidebar='rail'] .nav-item {
+  padding-right: 0;
+  justify-content: flex-start;
+}
+
+.sidebar-foot {
+  flex: 0 0 auto;
+  border-top: 1px solid var(--ink-border);
+  padding: 8px;
+}
+
+.sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px;
+  text-align: left;
+  color: var(--ink-text);
+  transition: background var(--d-hover) ease-out;
+}
+
+.sidebar-user:hover {
+  background: var(--ink-2);
+}
+
+html[data-sidebar='rail'] .sidebar-user-meta {
+  display: none;
+}
+
+.collapse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 40px;
+  color: var(--ink-text-muted);
+  border-top: 1px solid var(--ink-border);
+  margin-top: 8px;
+  transition: color var(--d-hover) ease-out, background var(--d-hover) ease-out;
+}
+
+.collapse-btn:hover {
+  color: var(--ink-text);
+  background: var(--ink-2);
+}
+
+.collapse-btn .chev {
+  transition: transform var(--d-sidebar) var(--ease);
+}
+
+html[data-sidebar='rail'] .collapse-btn .chev {
+  transform: rotate(180deg);
+}
+
+html[data-sidebar='rail'] .collapse-btn-label {
+  display: none;
+}
+
+/* --------------------------------------------------------------------------
+   Kolom kanan: topbar lengket plus isi
+   -------------------------------------------------------------------------- */
+
+.main-col {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  height: var(--topbar-h);
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 var(--gutter);
+  /* Latar SOLID, sengaja tanpa backdrop-filter, supaya jebakan containing
+     block R53 tidak pernah muncul di build ini. */
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.topbar-title {
+  min-width: 0;
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  color: var(--text-muted);
+  border: 1px solid transparent;
+  transition: background var(--d-hover) ease-out, color var(--d-hover) ease-out;
+}
+
+.icon-btn:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.hamburger {
+  display: none;
+  width: 44px;
+  height: 44px;
+  margin-left: -8px;
+}
+
+.page {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: var(--gutter);
+  max-width: var(--content-max);
+  width: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   Kepala halaman. Aksi utama di KIRI, sejajar judul (DESIGN.md 6.1).
+   Urutan tetap di semua halaman: judul, aksi utama, filter, lalu data.
+   -------------------------------------------------------------------------- */
+
+.page-head {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.page-head-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.page-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.page-title-block {
+  min-width: 0;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.toolbar-spacer {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.section {
+  margin-top: 24px;
+}
+
+.section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+/* Grid isi umum */
+.grid {
+  display: grid;
+  gap: 16px;
+}
+
+.grid-kpi {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.grid-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.grid-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.grid-detail {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  align-items: start;
+}
+
+/* --------------------------------------------------------------------------
+   Perpindahan halaman, 200ms redup masuk plus geser 4px (R46, DESIGN.md 7)
+   -------------------------------------------------------------------------- */
+
+/* Sengaja TANPA animation-fill-mode. `transform` yang tersisa setelah animasi
+   akan menjadikan pembungkus ini containing block untuk setiap keturunan
+   `position: fixed` (R53). Tanpa fill-mode, begitu animasi selesai tidak ada
+   nilai transform yang tertinggal sama sekali. */
+.page-enter {
+  animation: pageEnter var(--d-page) var(--ease);
+}
+
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Titik henti responsif: 375, 480, 768, 1025, 1440 (DESIGN.md 5.4)
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 1024px) {
+  /* Sidebar keluar dari alur dan jadi laci geser yang di-portal ke
+     document.body (R53). Yang di bawah ini hanya menyembunyikan versi
+     statisnya, laci punya kelas sendiri di components.css. */
+  .sidebar {
+    display: none;
+  }
+
+  .hamburger {
+    display: inline-flex;
+  }
+
+  .grid-kpi {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .grid-detail {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --gutter: 16px;
+  }
+
+  .grid-2,
+  .grid-3 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .page {
+    padding: 16px;
+  }
+
+  .topbar {
+    padding: 0 16px;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .grid-kpi {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .page-head-top {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

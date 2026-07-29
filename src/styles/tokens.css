@@ -1,0 +1,103 @@
+/* ==========================================================================
+   Token warna Jaring.
+   Disalin apa adanya dari DESIGN.md bagian 2. Jangan menambah warna baru di
+   sini. Kalau sebuah komponen butuh warna yang belum ada, komponennya yang
+   salah, bukan paletnya yang kurang.
+   Semua rasio kontras sudah dihitung di DESIGN.md bagian 3 (R20).
+   ========================================================================== */
+
+:root {
+  /* Permukaan, terang */
+  --bg:              #F4F7F8;  /* kanvas aplikasi */
+  --surface:         #FFFFFF;  /* kartu, tabel, panel */
+  --surface-2:       #EDF2F4;  /* header tabel, hover baris, isian halus */
+  --surface-3:       #E3EAED;  /* baris bergaris, track progress, kolom kanban */
+
+  /* Garis */
+  --border:          #D2DCE0;  /* garis rambut dekoratif, pemisah tabel */
+  --border-strong:   #A6B7BE;  /* pemisah tegas antar wilayah */
+  --control-border:  #74868E;  /* WAJIB untuk batas kontrol: input, checkbox, toggle, stepper */
+
+  /* Teks di permukaan terang */
+  --text:            #0E1F24;  /* teks utama, judul, nilai tabel */
+  --text-muted:      #47606A;  /* teks sekunder, label kolom, keterangan */
+  --text-subtle:     #546A74;  /* teks paling redup yang masih boleh, placeholder */
+
+  /* Merek, teal laut dalam */
+  --brand:           #0C6B7A;  /* isian tombol utama, tautan, cincin fokus */
+  --brand-deep:      #084B57;  /* hover tombol utama, teks merek di atas soft */
+  --brand-soft:      #DDEEF1;  /* latar badge merek, baris terpilih */
+  --brand-ink:       #06414B;  /* teks di atas brand-soft */
+  --brand-bright:    #35B3C4;  /* HANYA cincin fokus di atas latar gelap, DILARANG jadi teks di latar terang */
+
+  /* Ink, wilayah gelap (sidebar) */
+  --ink:             #0D2229;  /* latar sidebar */
+  --ink-2:           #16323B;  /* hover item sidebar, header sidebar */
+  --ink-3:           #1E404B;  /* item sidebar aktif */
+  --ink-border:      #2C4A54;  /* pemisah dekoratif di dalam sidebar */
+  --ink-control-border: #587E8C; /* batas kontrol di dalam sidebar */
+  --ink-text:        #E8F0F2;  /* teks sidebar */
+  --ink-text-muted:  #9FB6BE;  /* label grup sidebar, teks redup di sidebar */
+
+  /* Aksen, violet. Dipakai untuk skor lead dan seri grafik kedua */
+  --accent:          #5B3FBF;
+  --accent-soft:     #E8E2FA;
+  --accent-ink:      #432C93;
+
+  /* Semantik */
+  --success:         #0D7038;  /* deal menang, target tercapai, status aktif */
+  --success-soft:    #DDF2E4;
+  --success-ink:     #0A5A2C;
+
+  --warning:         #8A5A00;  /* deal mandek, jatuh tempo dekat */
+  --warning-soft:    #FAEFD2;
+  --warning-ink:     #6B4600;
+
+  --danger:          #B3261E;  /* deal kalah, terlambat, aksi merusak */
+  --danger-soft:     #FADEDB;
+  --danger-ink:      #8C1D18;
+
+  --info:            #2456C9;  /* netral informatif, tahap awal pipeline */
+  --info-soft:       #DFE8FB;
+  --info-ink:        #1B429B;
+
+  /* Seri grafik, urut. Aman untuk defisiensi warna karena beda terang jelas */
+  --chart-1:         #0C6B7A;
+  --chart-2:         #5B3FBF;
+  --chart-3:         #B8790B;
+  --chart-4:         #0D7038;
+  --chart-5:         #B3261E;
+  --chart-6:         #2456C9;
+  --chart-grid:      #E3EAED;
+  --chart-axis:      #546A74;
+
+  /* Bayangan, HANYA untuk lapisan mengambang yang di-portal ke body (R53) */
+  --shadow-pop:      0 8px 24px rgba(14, 31, 36, 0.16);
+  --shadow-modal:    0 16px 48px rgba(14, 31, 36, 0.24);
+
+  /* Bentuk. R10, tanpa pengecualian */
+  --radius:          0;
+
+  /* ---- Ukuran tata letak, DESIGN.md 5.3 ---- */
+  --sidebar-w:       248px;
+  --sidebar-w-rail:  64px;
+  --topbar-h:        56px;
+  --content-max:     1440px;
+  --gutter:          24px;
+  --row-h:           44px;
+  --row-h-head:      40px;
+  --row-h-dense:     36px;
+  --kanban-col-w:    288px;
+  --kanban-gap:      12px;
+  --drawer-w:        480px;
+
+  /* ---- Gerak, DESIGN.md bagian 7. Semua di jendela 150ms sampai 300ms (R46) ---- */
+  --ease:            cubic-bezier(.2, 0, 0, 1);
+  --d-page:          200ms;
+  --d-dropdown:      160ms;
+  --d-view:          200ms;
+  --d-sidebar:       200ms;
+  --d-drawer:        240ms;
+  --d-modal:         200ms;
+  --d-hover:         120ms;
+}

@@ -1,0 +1,593 @@
+/* ==========================================================================
+   Gaya khusus per layar: landing, login, kalender aktivitas, grafik,
+   laporan, dan penawaran.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Landing produk ringkas di "/". Satu layar, penjelasan singkat, tombol
+   masuk ke demo. Bukan situs marketing (HIM-283).
+   -------------------------------------------------------------------------- */
+
+.landing {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+.landing-bar {
+  height: var(--topbar-h);
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 var(--gutter);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.landing-main {
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 48px var(--gutter) 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.landing-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 40px;
+  align-items: center;
+}
+
+.landing-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.landing-eyebrow {
+  color: var(--brand); /* 5.74:1 di atas --bg */
+}
+
+.landing-lede {
+  color: var(--text-muted); /* 6.19:1 di atas --bg */
+  font-size: 16px;
+  line-height: 26px;
+  max-width: 48ch;
+}
+
+.landing-cta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+/* Motif kisi dari logo, muncul SEKALI saja sebagai elemen tenang, dan tidak
+   pernah di belakang teks yang harus terbaca (ART-DIRECTION 7). */
+.grid-motif {
+  position: relative;
+  background-color: var(--ink);
+  background-image:
+    linear-gradient(to right, var(--ink-border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--ink-border) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: -1px -1px;
+}
+
+.landing-preview {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.landing-preview-board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.lp-col {
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 150px;
+}
+
+.lp-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--brand);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.landing-pillars {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.pillar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--brand);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pillar[data-tone='accent'] { border-left-color: var(--accent); }
+.pillar[data-tone='success'] { border-left-color: var(--success); }
+
+.landing-foot {
+  flex: 0 0 auto;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  padding: 16px var(--gutter);
+}
+
+.landing-foot-inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  color: var(--text-muted);
+}
+
+@media (max-width: 1024px) {
+  .landing-hero {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
+}
+
+@media (max-width: 768px) {
+  .landing-main {
+    padding: 28px 16px 32px;
+    gap: 24px;
+  }
+
+  .landing-pillars {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. Layar login demo, ART-DIRECTION 7. Dua kolom di desktop, panel gelap
+   di kiri menyusut jadi kepala halaman di bawah 768px.
+   -------------------------------------------------------------------------- */
+
+.login {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.login-aside {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 32px;
+  padding: 40px;
+  color: var(--ink-text);
+}
+
+.login-aside-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 40ch;
+  /* Latar pejal di belakang teks supaya motif kisi tidak pernah berada di
+     belakang teks yang harus terbaca (ART-DIRECTION 7). */
+  background: var(--ink);
+  padding: 20px;
+  border-left: 3px solid var(--brand-bright);
+}
+
+.login-aside-lede {
+  color: var(--ink-text-muted); /* 7.75:1 di atas --ink */
+}
+
+.login-panel {
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 40px;
+}
+
+.login-form {
+  width: 100%;
+  max-width: 380px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.login-creds {
+  background: var(--brand-soft);
+  border-left: 3px solid var(--brand);
+  padding: 12px;
+  color: var(--brand-ink); /* 9.42:1 */
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.login-cred-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.login-foot {
+  margin-top: 24px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .login {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .login-aside {
+    padding: 24px 16px;
+    gap: 20px;
+  }
+
+  .login-panel {
+    padding: 24px 16px 40px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   3. Kalender aktivitas. Tampilan bulan dan minggu.
+   -------------------------------------------------------------------------- */
+
+.cal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.cal-head {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.cal-dow {
+  padding: 8px 10px;
+  color: var(--text-muted); /* 5.91:1 di atas --surface-2 */
+  text-align: left;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.cal-cell {
+  min-height: 112px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.cal-cell:nth-child(7n) {
+  border-right: 0;
+}
+
+.cal-cell[data-outside='true'] {
+  background: var(--surface-2);
+}
+
+.cal-cell[data-today='true'] {
+  box-shadow: inset 0 3px 0 0 var(--brand);
+}
+
+.cal-daynum {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.cal-cell[data-today='true'] .cal-daynum {
+  color: var(--brand); /* 6.18:1 */
+  font-weight: 700;
+}
+
+.cal-ev {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 4px 6px;
+  border-left: 3px solid var(--brand);
+  background: var(--surface-2);
+  color: var(--text);
+  text-align: left;
+  width: 100%;
+  min-width: 0;
+}
+
+.cal-ev:hover {
+  background: var(--surface-3);
+  text-decoration: none;
+}
+
+.cal-ev[data-tone='danger']  { border-left-color: var(--danger);  background: var(--danger-soft);  color: var(--danger-ink); }
+.cal-ev[data-tone='warning'] { border-left-color: var(--warning); background: var(--warning-soft); color: var(--warning-ink); }
+.cal-ev[data-tone='success'] { border-left-color: var(--success); background: var(--success-soft); color: var(--success-ink); }
+.cal-ev[data-tone='accent']  { border-left-color: var(--accent);  background: var(--accent-soft);  color: var(--accent-ink); }
+
+.cal-more {
+  color: var(--text-muted);
+  padding: 0 6px;
+  text-align: left;
+}
+
+/* Di bawah 768px kalender bulan jadi daftar hari yang punya aktivitas.
+   Grid 7 kolom di 375px membuat sel selebar 50px, itu tidak terbaca. */
+.cal-monthgrid {
+  display: block;
+}
+
+.cal-agenda {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .cal-monthgrid {
+    display: none;
+  }
+
+  .cal-agenda {
+    display: block;
+  }
+}
+
+.agenda-day {
+  border-bottom: 1px solid var(--border);
+  padding: 12px;
+}
+
+.agenda-day:last-child {
+  border-bottom: 0;
+}
+
+.agenda-daytitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+/* Tampilan minggu */
+.cal-week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.cal-weekcol {
+  border-right: 1px solid var(--border);
+  min-height: 320px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.cal-weekcol:last-child {
+  border-right: 0;
+}
+
+.cal-weekhead {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   4. Grafik. Dirender dari data sebagai SVG, bukan berkas gambar.
+   -------------------------------------------------------------------------- */
+
+.chart {
+  width: 100%;
+  display: block;
+  overflow: visible;
+}
+
+.chart-grid-line {
+  stroke: var(--chart-grid);
+  stroke-width: 1;
+}
+
+.chart-axis-text {
+  fill: var(--chart-axis); /* 5.69:1 di atas --surface */
+  font-size: 11px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Setiap seri WAJIB punya legenda berlabel teks, tidak boleh mengandalkan
+   warna saja (DESIGN.md 6.8). */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 12px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+}
+
+.legend-swatch {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 auto;
+}
+
+/* Corong konversi per tahap */
+.funnel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.funnel-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.funnel-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.funnel-track {
+  height: 24px;
+  background: var(--surface-3);
+  width: 100%;
+}
+
+.funnel-fill {
+  height: 100%;
+  transition: width var(--d-view) var(--ease);
+}
+
+/* --------------------------------------------------------------------------
+   5. Penawaran, tampilan menyerupai dokumen
+   -------------------------------------------------------------------------- */
+
+.quote-doc {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 24px;
+}
+
+.quote-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-strong);
+}
+
+.quote-total {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-left: auto;
+  min-width: 260px;
+  max-width: 100%;
+}
+
+.quote-total-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.quote-total-row[data-grand='true'] {
+  border-top: 1px solid var(--border-strong);
+  padding-top: 8px;
+  margin-top: 4px;
+}
+
+@media (max-width: 768px) {
+  .quote-doc {
+    padding: 16px;
+  }
+
+  .quote-total {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   6. Pengaturan
+   -------------------------------------------------------------------------- */
+
+.settings-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.settings-row:last-child {
+  border-bottom: 0;
+}
+
+.stage-swatch {
+  width: 4px;
+  height: 28px;
+  flex: 0 0 auto;
+}
+
+/* --------------------------------------------------------------------------
+   7. Halaman 404
+   -------------------------------------------------------------------------- */
+
+.nf {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px;
+  text-align: center;
+}

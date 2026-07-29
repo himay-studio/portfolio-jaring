@@ -1,0 +1,1684 @@
+/* ==========================================================================
+   Komponen dasar yang dipakai ulang seluruh aplikasi.
+   Aturan lengkapnya ada di DESIGN.md bagian 6. Dibangun sekali di Stage 3,
+   dipakai apa adanya oleh semua modul dan oleh Stage 5.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Tombol, DESIGN.md 6.1
+   -------------------------------------------------------------------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  min-width: 40px;
+  padding: 0 16px;
+  font-size: 14px;
+  line-height: 22px;
+  font-weight: 600;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  transition: background var(--d-hover) ease-out, color var(--d-hover) ease-out,
+    border-color var(--d-hover) ease-out;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--brand); /* putih di atas --brand = 6.18:1 */
+  color: #fff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--brand-deep); /* 9.75:1 */
+}
+
+.btn-secondary {
+  background: var(--surface);
+  border-color: var(--control-border); /* 3.79:1, batas kontrol wajib */
+  color: var(--text);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--brand); /* 6.18:1 */
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: var(--brand-soft);
+}
+
+.btn-danger {
+  background: var(--danger); /* putih di atas --danger = 6.54:1 */
+  color: #fff;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: var(--danger-ink);
+}
+
+.btn-danger:focus-visible {
+  outline-color: var(--danger);
+}
+
+.btn-sm {
+  height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+/* Tap target minimum 44x44px di mobile (DESIGN.md 8.9) */
+@media (max-width: 768px) {
+  .btn {
+    height: 44px;
+  }
+
+  .btn-sm {
+    height: 40px;
+  }
+
+  .icon-btn {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. Kontrol form, DESIGN.md 6.4
+   -------------------------------------------------------------------------- */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.field-label {
+  color: var(--text-muted); /* 6.67:1 di atas --surface */
+}
+
+.input,
+.textarea {
+  height: 40px;
+  padding: 0 12px;
+  background: var(--surface);
+  border: 1px solid var(--control-border); /* WAJIB, bukan --border (R20) */
+  color: var(--text);
+  font-size: 14px;
+  transition: border-color var(--d-hover) ease-out;
+  width: 100%;
+}
+
+.textarea {
+  height: auto;
+  min-height: 88px;
+  padding: 10px 12px;
+  line-height: 22px;
+  resize: vertical;
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  color: var(--text-subtle); /* 5.69:1 */
+}
+
+.input:focus,
+.textarea:focus {
+  border-color: var(--brand);
+}
+
+.input[aria-invalid='true'],
+.textarea[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+/* Galat ditandai teks, bukan hanya warna batas (DESIGN.md 6.4) */
+.field-err {
+  color: var(--danger); /* 6.54:1 */
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.field-hint {
+  color: var(--text-subtle);
+}
+
+.search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex: 0 1 260px;
+}
+
+.search .search-icon {
+  position: absolute;
+  left: 10px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.search .input {
+  padding-left: 34px;
+}
+
+/* Checkbox dan radio: 18x18 dengan area sentuh 44x44 (DESIGN.md 6.4) */
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 24px;
+  cursor: pointer;
+  position: relative;
+}
+
+.check input {
+  position: absolute;
+  opacity: 0;
+  width: 44px;
+  height: 44px;
+  left: -13px;
+  top: 50%;
+  transform: translateY(-50%);
+  margin: 0;
+  cursor: pointer;
+}
+
+.check-box {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--control-border); /* 3.79:1 */
+  background: var(--surface);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  transition: background var(--d-hover) ease-out, border-color var(--d-hover) ease-out;
+}
+
+.check input:checked ~ .check-box {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff; /* centang putih di atas --brand = 6.18:1 */
+}
+
+.check input:indeterminate ~ .check-box {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+
+.check input:focus-visible ~ .check-box {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+/* Toggle: track --control-border saat mati, --brand saat hidup, SELALU
+   berpasangan dengan label teks, bukan hanya warna (DESIGN.md 6.4) */
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.toggle input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-track {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 22px;
+  background: var(--surface);
+  border: 1px solid var(--control-border);
+  position: relative;
+  transition: background var(--d-hover) ease-out, border-color var(--d-hover) ease-out;
+}
+
+.toggle-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: var(--control-border);
+  transition: transform var(--d-hover) ease-out, background var(--d-hover) ease-out;
+}
+
+.toggle input:checked ~ .toggle-track {
+  background: var(--brand);
+  border-color: var(--brand);
+}
+
+.toggle input:checked ~ .toggle-track .toggle-knob {
+  background: #fff;
+  transform: translateX(18px);
+}
+
+.toggle input:focus-visible ~ .toggle-track {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.toggle-state {
+  color: var(--text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   3. Dropdown kustom, R12 dan DESIGN.md 6.2.
+   DILARANG native <select>. Panel dilepas dari DOM saat tertutup, jadi
+   sama sekali tidak menyumbang lebar layout (R57).
+   -------------------------------------------------------------------------- */
+
+.sel {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sel-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  height: 40px;
+  min-width: 0;
+  padding: 0 10px 0 12px;
+  background: var(--surface);
+  border: 1px solid var(--control-border); /* 3.79:1 */
+  color: var(--text);
+  text-align: left;
+  transition: border-color var(--d-hover) ease-out, background var(--d-hover) ease-out;
+}
+
+.sel-trigger:hover {
+  background: var(--surface-2);
+}
+
+.sel-trigger[aria-expanded='true'] {
+  border-color: var(--brand);
+}
+
+.sel-value {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sel-value[data-placeholder='true'] {
+  color: var(--text-subtle); /* 5.69:1 */
+}
+
+.sel-chev {
+  flex: 0 0 auto;
+  color: var(--text-muted);
+  transition: transform var(--d-dropdown) var(--ease);
+}
+
+.sel-trigger[aria-expanded='true'] .sel-chev {
+  transform: rotate(180deg);
+}
+
+.sel-panel {
+  position: absolute;
+  top: calc(100% + 2px);
+  z-index: 60;
+  min-width: 100%;
+  /* Clamp viewport wajib, panel tidak boleh keluar jendela di titik henti
+     mana pun, termasuk desktop sempit 1025px (R16.1, R19, R57). */
+  max-width: calc(100vw - 2rem);
+  max-height: 288px;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  box-shadow: var(--shadow-pop);
+  padding: 4px 0;
+}
+
+/* Penjangkaran: pemicu paling kiri tumbuh ke kanan, paling kanan tumbuh ke
+   kiri. Tidak pernah left:50% translateX(-50%) tanpa clamp (R16.1). */
+.sel-panel[data-align='left'] {
+  left: 0;
+}
+
+.sel-panel[data-align='right'] {
+  right: 0;
+}
+
+.sel-panel[data-phase='opening'] {
+  animation: popIn var(--d-dropdown) var(--ease) both;
+}
+
+.sel-panel[data-phase='closing'] {
+  animation: popOut var(--d-dropdown) var(--ease) both;
+  pointer-events: none;
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes popOut {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.sel-opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 36px;
+  padding: 7px 12px;
+  text-align: left;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.sel-opt:hover,
+.sel-opt[data-active='true'] {
+  background: var(--surface-2);
+}
+
+.sel-opt[aria-selected='true'] {
+  background: var(--brand-soft);
+  color: var(--brand-ink); /* 9.42:1 */
+  font-weight: 600;
+}
+
+.sel-opt-check {
+  margin-left: auto;
+  color: var(--brand);
+}
+
+.sel-empty {
+  padding: 12px;
+  color: var(--text-subtle);
+}
+
+@media (max-width: 768px) {
+  .sel-trigger {
+    height: 44px;
+  }
+
+  .sel-opt {
+    min-height: 44px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   4. Date picker kustom, R21 dan DESIGN.md 6.3.
+   DILARANG input teks tanggal bebas.
+   -------------------------------------------------------------------------- */
+
+.dp {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dp-panel {
+  position: absolute;
+  top: calc(100% + 2px);
+  z-index: 60;
+  width: 292px;
+  max-width: calc(100vw - 2rem); /* R57 */
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  box-shadow: var(--shadow-pop);
+  padding: 12px;
+}
+
+.dp-panel[data-align='left'] {
+  left: 0;
+}
+
+.dp-panel[data-align='right'] {
+  right: 0;
+}
+
+.dp-panel[data-phase='opening'] {
+  animation: popIn var(--d-dropdown) var(--ease) both;
+}
+
+.dp-panel[data-phase='closing'] {
+  animation: popOut var(--d-dropdown) var(--ease) both;
+  pointer-events: none;
+}
+
+.dp-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.dp-nav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  color: var(--text-muted);
+}
+
+.dp-nav:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.dp-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.dp-dow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  color: var(--text-muted); /* 6.67:1 */
+}
+
+.dp-day {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  color: var(--text);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background var(--d-hover) ease-out;
+}
+
+.dp-day:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+
+.dp-day[data-outside='true'] {
+  color: var(--text-subtle);
+}
+
+/* Hari ini ditandai batas, bukan hanya warna */
+.dp-day[data-today='true'] {
+  border-color: var(--brand);
+  font-weight: 600;
+}
+
+.dp-day[aria-selected='true'] {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff; /* 6.18:1 */
+  font-weight: 600;
+}
+
+.dp-day[data-in-range='true'] {
+  background: var(--brand-soft);
+  color: var(--brand-ink); /* 9.42:1 */
+}
+
+.dp-day:disabled {
+  color: var(--text-subtle);
+  cursor: not-allowed;
+}
+
+.dp-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+/* --------------------------------------------------------------------------
+   5. Kartu dan KPI, ART-DIRECTION 7
+   -------------------------------------------------------------------------- */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  /* Kartu TIDAK berbayang. Kedalaman dari permukaan berjenjang (DESIGN.md 5.5) */
+}
+
+.card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.card-body {
+  padding: 16px;
+}
+
+.card-foot {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+/* Batang tepi kiri 3px sebagai penanda kategori di seluruh aplikasi.
+   Ini yang mengikat sidebar, kanban, tabel, dan KPI jadi satu sistem. */
+.kpi {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--brand);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.kpi[data-tone='success'] { border-left-color: var(--success); }
+.kpi[data-tone='warning'] { border-left-color: var(--warning); }
+.kpi[data-tone='danger']  { border-left-color: var(--danger); }
+.kpi[data-tone='info']    { border-left-color: var(--info); }
+.kpi[data-tone='accent']  { border-left-color: var(--accent); }
+
+.kpi-label {
+  color: var(--text-muted); /* 6.67:1 */
+}
+
+.kpi-value {
+  color: var(--text);
+}
+
+/* Perbandingan periode: panah PLUS teks, bukan hanya warna (ART-DIRECTION 7) */
+.kpi-delta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+}
+
+.kpi-delta[data-dir='up'] { color: var(--success); }   /* 6.19:1 */
+.kpi-delta[data-dir='down'] { color: var(--danger); }  /* 6.54:1 */
+
+/* --------------------------------------------------------------------------
+   6. Badge, DESIGN.md 6.5 dan peta arti di bagian 2.
+   Selalu pasangan soft dan ink. Tidak pernah bulatan warna tanpa teks.
+   -------------------------------------------------------------------------- */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 20px;
+  padding: 0 8px;
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--surface-2);
+  color: var(--text-muted);
+}
+
+.badge[data-tone='brand']   { background: var(--brand-soft);   color: var(--brand-ink); }   /* 9.42:1 */
+.badge[data-tone='accent']  { background: var(--accent-soft);  color: var(--accent-ink); }  /* 8.26:1 */
+.badge[data-tone='success'] { background: var(--success-soft); color: var(--success-ink); } /* 7.12:1 */
+.badge[data-tone='warning'] { background: var(--warning-soft); color: var(--warning-ink); } /* 7.33:1 */
+.badge[data-tone='danger']  { background: var(--danger-soft);  color: var(--danger-ink); }  /* 7.18:1 */
+.badge[data-tone='info']    { background: var(--info-soft);    color: var(--info-ink); }    /* 7.43:1 */
+
+.badge-solid[data-tone='brand']   { background: var(--brand);   color: #fff; }
+.badge-solid[data-tone='success'] { background: var(--success); color: #fff; }
+.badge-solid[data-tone='warning'] { background: var(--warning); color: #fff; }
+.badge-solid[data-tone='danger']  { background: var(--danger);  color: #fff; }
+
+/* --------------------------------------------------------------------------
+   7. Avatar. Persegi, bukan lingkaran (DESIGN.md 5.1).
+   Inisial di atas blok warna, bukan foto. Semua latar di bawah lulus 4.5:1
+   dengan teks putih, angkanya ada di DESIGN.md 3.2.
+   -------------------------------------------------------------------------- */
+
+.avatar {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--font-display);
+  letter-spacing: 0.01em;
+  user-select: none;
+}
+
+.avatar[data-size='sm'] { width: 24px; height: 24px; font-size: 10px; }
+.avatar[data-size='lg'] { width: 48px; height: 48px; font-size: 16px; }
+.avatar[data-size='xl'] { width: 64px; height: 64px; font-size: 22px; }
+
+.avatar[data-hue='0'] { background: var(--brand); }      /* 6.18:1 */
+.avatar[data-hue='1'] { background: var(--accent); }     /* 7.22:1 */
+.avatar[data-hue='2'] { background: var(--success); }    /* 6.19:1 */
+.avatar[data-hue='3'] { background: var(--warning); }    /* 5.93:1 */
+.avatar[data-hue='4'] { background: var(--danger); }     /* 6.54:1 */
+.avatar[data-hue='5'] { background: var(--info); }       /* 6.46:1 */
+.avatar[data-hue='6'] { background: var(--brand-deep); } /* 9.75:1 */
+.avatar[data-hue='7'] { background: var(--ink-3); }      /* 11.11:1 */
+
+/* --------------------------------------------------------------------------
+   8. Tabel, DESIGN.md 6.6
+   -------------------------------------------------------------------------- */
+
+.table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.table {
+  width: 100%;
+  /* WAJIB `fixed`. Dengan `auto`, kolom melebar sampai muat isi terpanjang dan
+     tabel padat data ini meluap keluar viewport di lebar desktop sempit.
+     Terukur di 1025px, titik paling sempit karena sidebar 248px sudah muncul
+     tapi kanvasnya belum lebar: /app/kontak/ melapor scrollWidth 1065 lawan
+     innerWidth 1025. Dengan `fixed`, lebar kolom ditentukan baris pertama dan
+     isi yang kepanjangan dipotong, bukan mendorong tabelnya melebar. */
+  table-layout: fixed;
+}
+
+/* Kolom yang boleh hilang lebih dulu di desktop sempit. Ambangnya 1280px,
+   bukan 1024px, karena di 1025px sidebar sudah memakan 248px sementara
+   kanvasnya belum tumbuh, jadi justru di situ ruangnya paling sempit. */
+@media (max-width: 1279px) {
+  .table .col-opsional {
+    display: none;
+  }
+}
+
+/* Isi sel yang kepanjangan dipotong dengan elipsis, tidak melebarkan tabel */
+.table-cell-stack > * {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.table thead th {
+  position: sticky;
+  top: var(--topbar-h);
+  z-index: 5;
+  height: var(--row-h-head);
+  padding: 0 12px;
+  background: var(--surface-2);
+  color: var(--text-muted); /* 5.91:1 di atas --surface-2 */
+  text-align: left;
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border);
+}
+
+.table thead th.num {
+  text-align: right;
+}
+
+.th-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+}
+
+.th-sort:hover {
+  color: var(--text);
+}
+
+.th-sort .sort-icon {
+  opacity: 0;
+  transition: opacity var(--d-hover) ease-out;
+}
+
+.th-sort:hover .sort-icon,
+.table thead th[aria-sort]:not([aria-sort='none']) .sort-icon {
+  opacity: 1;
+}
+
+.table tbody td {
+  height: var(--row-h);
+  padding: 0 12px;
+  font-size: 13px;
+  line-height: 20px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.table tbody td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.table tbody td:first-child,
+.td-key {
+  font-weight: 600;
+}
+
+.table tbody tr {
+  transition: background var(--d-hover) ease-out;
+}
+
+.table tbody tr[data-clickable='true'] {
+  cursor: pointer;
+}
+
+.table tbody tr:hover {
+  background: var(--surface-2); /* 15.00:1 */
+}
+
+/* Baris terpilih tidak boleh ditandai warna saja. Wajib checkbox tercentang
+   plus batang kiri --brand 3px (DESIGN.md 3.6). */
+.table tbody tr[aria-selected='true'] {
+  background: var(--brand-soft);
+  box-shadow: inset 3px 0 0 0 var(--brand);
+}
+
+.table-dense tbody td {
+  height: var(--row-h-dense);
+}
+
+.table-cell-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.table-cell-stack > * {
+  display: block;
+}
+
+.bulkbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  background: var(--brand-soft);
+  border-bottom: 1px solid var(--border);
+  color: var(--brand-ink); /* 9.42:1 */
+}
+
+.table-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+/* Di bawah 768px tabel berubah jadi daftar kartu, bukan tabel yang digulir
+   mendatar, karena gulir mendatar memicu overflow (DESIGN.md 5.4).
+   Kedua markup ada di DOM, yang tidak dipakai display:none jadi tidak
+   menyumbang lebar layout sama sekali (R57). */
+.table-view {
+  display: block;
+}
+
+.cardlist-view {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .table-view {
+    display: none;
+  }
+
+  .cardlist-view {
+    display: block;
+  }
+}
+
+/* Daftar kartu pengganti tabel di mobile. Ini KOLEKSI DATA, bukan section
+   dekoratif, jadi sengaja tumpukan vertikal dan bukan carousel. Lihat
+   LAYOUT-ARCHITECTURE.md bagian batas R48. */
+.cardlist {
+  display: flex;
+  flex-direction: column;
+}
+
+.cardlist-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  border-left: 3px solid transparent;
+  color: var(--text);
+  text-align: left;
+  width: 100%;
+  min-height: 44px;
+}
+
+.cardlist-item:last-child {
+  border-bottom: 0;
+}
+
+.cardlist-item:hover {
+  background: var(--surface-2);
+  text-decoration: none;
+}
+
+.cardlist-item[aria-selected='true'] {
+  background: var(--brand-soft);
+  border-left-color: var(--brand);
+}
+
+.cardlist-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  color: var(--text-muted);
+}
+
+/* Kisi kartu untuk view Card. Sama seperti daftar kartu mobile, ini KOLEKSI
+   DATA dan bukan section kartu dekoratif, jadi di mobile jadi satu kolom
+   penuh dan bukan carousel. Batasnya dijelaskan di LAYOUT-ARCHITECTURE.md. */
+.cardgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(288px, 1fr));
+  gap: 12px;
+}
+
+.entity-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border-strong);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  color: var(--text);
+  min-width: 0;
+}
+
+.entity-card:hover {
+  background: var(--surface-2);
+  border-left-color: var(--brand);
+  text-decoration: none;
+}
+
+.entity-card[data-kind='lead'] { border-left-color: var(--accent); }
+.entity-card[data-kind='kontak'] { border-left-color: var(--brand); }
+.entity-card[data-kind='perusahaan'] { border-left-color: var(--info); }
+.entity-card[data-kind='penawaran'] { border-left-color: var(--warning); }
+
+.entity-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+
+@media (max-width: 480px) {
+  .cardgrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   9. Pemindah view. Pilihan terakhir diingat lewat localStorage per halaman,
+   dan berpindah view TIDAK mereset filter yang sedang aktif.
+   -------------------------------------------------------------------------- */
+
+.viewsw {
+  display: inline-flex;
+  border: 1px solid var(--control-border); /* 3.79:1 */
+  background: var(--surface);
+}
+
+.viewsw-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 12px;
+  color: var(--text-muted);
+  border-right: 1px solid var(--border);
+  transition: background var(--d-hover) ease-out, color var(--d-hover) ease-out;
+}
+
+.viewsw-btn:last-child {
+  border-right: 0;
+}
+
+.viewsw-btn:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+/* Aktif ditandai isian pekat PLUS bobot teks, bukan warna teks saja */
+.viewsw-btn[aria-pressed='true'] {
+  background: var(--brand);
+  color: #fff; /* 6.18:1 */
+  font-weight: 600;
+}
+
+.viewsw-btn[aria-pressed='true'] + .viewsw-btn {
+  border-left: 0;
+}
+
+/* Silang redup 200ms saat berpindah view (DESIGN.md 7) */
+.view-pane {
+  animation: viewIn var(--d-view) var(--ease) both;
+}
+
+@keyframes viewIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .viewsw-btn {
+    height: 42px;
+    min-width: 44px;
+    justify-content: center;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   10. Tab, dipakai di Pengaturan dan halaman detail
+   -------------------------------------------------------------------------- */
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  scrollbar-width: thin;
+  contain: paint; /* lihat catatan di .kanban */
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 14px;
+  color: var(--text-muted); /* 6.67:1 */
+  border-bottom: 3px solid transparent;
+  white-space: nowrap;
+  transition: color var(--d-hover) ease-out, border-color var(--d-hover) ease-out;
+}
+
+.tab:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.tab[aria-selected='true'] {
+  color: var(--brand); /* 6.18:1 */
+  border-bottom-color: var(--brand);
+  font-weight: 600;
+}
+
+/* --------------------------------------------------------------------------
+   11. Modal dan drawer. KEDUANYA di-portal ke document.body (R53), jadi
+   tidak pernah bersarang di ancestor ber-filter atau ber-transform.
+   -------------------------------------------------------------------------- */
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(14, 31, 36, 0.5);
+}
+
+.scrim[data-phase='opening'] {
+  animation: fadeIn var(--d-modal) var(--ease) both;
+}
+
+.scrim[data-phase='closing'] {
+  animation: fadeOut var(--d-modal) var(--ease) both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.modal-wrap {
+  position: fixed;
+  inset: 0;
+  z-index: 101;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.modal {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  max-height: calc(100dvh - 32px);
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  box-shadow: var(--shadow-modal);
+}
+
+.modal[data-width='wide'] {
+  max-width: 760px;
+}
+
+.modal[data-phase='opening'] {
+  animation: modalIn var(--d-modal) var(--ease) both;
+}
+
+.modal[data-phase='closing'] {
+  animation: modalOut var(--d-modal) var(--ease) both;
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes modalOut {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateY(8px); }
+}
+
+.modal-head,
+.drawer-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  flex: 0 0 auto;
+}
+
+.modal-body,
+.drawer-body {
+  padding: 16px;
+  overflow-y: auto;
+  flex: 1 1 auto;
+}
+
+.modal-foot,
+.drawer-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
+  flex: 0 0 auto;
+}
+
+.drawer-wrap {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 101;
+  width: var(--drawer-w);
+  max-width: 100vw;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border-left: 1px solid var(--border-strong);
+  box-shadow: var(--shadow-modal);
+}
+
+.drawer-wrap[data-side='left'] {
+  right: auto;
+  left: 0;
+  border-left: 0;
+  border-right: 1px solid var(--border-strong);
+}
+
+.drawer-wrap[data-phase='opening'] {
+  animation: drawerIn var(--d-drawer) var(--ease) both;
+}
+
+.drawer-wrap[data-phase='closing'] {
+  animation: drawerOut var(--d-drawer) var(--ease) both;
+}
+
+.drawer-wrap[data-side='left'][data-phase='opening'] {
+  animation-name: drawerInLeft;
+}
+
+.drawer-wrap[data-side='left'][data-phase='closing'] {
+  animation-name: drawerOutLeft;
+}
+
+@keyframes drawerIn {
+  from { transform: translateX(100%); }
+  to { transform: none; }
+}
+
+@keyframes drawerOut {
+  from { transform: none; }
+  to { transform: translateX(100%); }
+}
+
+@keyframes drawerInLeft {
+  from { transform: translateX(-100%); }
+  to { transform: none; }
+}
+
+@keyframes drawerOutLeft {
+  from { transform: none; }
+  to { transform: translateX(-100%); }
+}
+
+@media (max-width: 768px) {
+  .drawer-wrap {
+    width: 100vw;
+  }
+}
+
+/* Laci navigasi mobile. Di-portal ke document.body, latar --ink, isi sama
+   dengan sidebar desktop. */
+.navdrawer {
+  width: 280px;
+  max-width: calc(100vw - 48px);
+  background: var(--ink);
+  color: var(--ink-text);
+  border-right: 1px solid var(--ink-border);
+  border-left: 0;
+}
+
+/* Kepala dan badan laci mewarisi gaya kanvas terang, jadi di laci gelap
+   semuanya harus ditimpa. Kalau tidak, tombol tutup jadi abu abu gelap di
+   atas latar gelap dan hilang, kelas kegagalan R20 yang sama dengan
+   navy on navy. */
+.navdrawer .drawer-head {
+  background: var(--ink-2);
+  border-bottom-color: var(--ink-border);
+  padding: 0 8px 0 16px;
+  height: var(--topbar-h);
+  align-items: center;
+}
+
+.navdrawer .drawer-body {
+  padding: 0;
+}
+
+.navdrawer .icon-btn {
+  color: var(--ink-text); /* 14.22:1 di atas --ink-2 */
+}
+
+.navdrawer .icon-btn:hover {
+  background: var(--ink-3);
+  color: var(--ink-text);
+}
+
+.navdrawer .sidebar-nav {
+  overflow: visible;
+}
+
+.navdrawer .sidebar-foot {
+  border-top-color: var(--ink-border);
+}
+
+/* --------------------------------------------------------------------------
+   12. Tooltip untuk sidebar rail dan aksi ikon. Di-portal ke body.
+   -------------------------------------------------------------------------- */
+
+.tip {
+  position: fixed;
+  z-index: 120;
+  padding: 5px 8px;
+  background: var(--ink);
+  color: var(--ink-text); /* 14.22:1 */
+  font-size: 12px;
+  line-height: 18px;
+  white-space: nowrap;
+  box-shadow: var(--shadow-pop);
+  pointer-events: none;
+  max-width: calc(100vw - 2rem);
+  animation: fadeIn var(--d-hover) ease-out both;
+}
+
+/* --------------------------------------------------------------------------
+   13. Keadaan kosong, ART-DIRECTION 7. Bentuk geometris SVG yang ditulis
+   sendiri, tanpa ilustrasi hasil generate.
+   -------------------------------------------------------------------------- */
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.empty-art {
+  color: var(--border-strong);
+}
+
+.empty-text {
+  color: var(--text-muted); /* 6.67:1 */
+  max-width: 42ch;
+}
+
+/* --------------------------------------------------------------------------
+   14. Skeleton. Bukan spinner penuh layar yang bikin layout melompat.
+   -------------------------------------------------------------------------- */
+
+.skel {
+  background: var(--surface-3);
+  animation: skelPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes skelPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+/* --------------------------------------------------------------------------
+   15. Kanban, DESIGN.md 6.7
+   -------------------------------------------------------------------------- */
+
+.kanban {
+  display: flex;
+  gap: var(--kanban-gap);
+  align-items: flex-start;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: thin;
+  /* `overflow-x: auto` SAJA tidak cukup. Diukur di Chrome pada build ini:
+     papan enam kolom bikin document.documentElement.scrollWidth jadi 1943
+     lawan innerWidth 375, walaupun .kanban sendiri sudah menggulir dengan
+     benar (clientWidth 375, scrollWidth 2005) dan body.scrollWidth tetap 375.
+     Isi wadah gulir masih ikut terhitung sebagai luapan dokumen, dan itu
+     kegagalan R19 yang tidak terlihat mata karena body sudah overflow-x
+     hidden. `contain: paint` menutup jalurnya, terukur turun ke 375.
+     Aman terhadap R53 di sini karena TIDAK ADA keturunan position fixed di
+     dalam papan: dialog alasan kalah dirender di luar dan di-portal ke body. */
+  contain: paint;
+}
+
+.kb-col {
+  flex: 0 0 var(--kanban-col-w);
+  width: var(--kanban-col-w);
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  min-height: 240px;
+  transition: background var(--d-hover) ease-out, border-color var(--d-hover) ease-out;
+}
+
+.kb-col[data-dropping='true'] {
+  background: var(--brand-soft);
+  border-color: var(--brand);
+}
+
+.kb-head {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.kb-head-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.kb-head-bar {
+  width: 3px;
+  height: 14px;
+  flex: 0 0 auto;
+}
+
+.kb-list {
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1 1 auto;
+}
+
+.kb-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--brand);
+  padding: 12px;
+  min-height: 88px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+  width: 100%;
+  cursor: grab;
+  transition: border-color var(--d-hover) ease-out, background var(--d-hover) ease-out;
+}
+
+.kb-card:hover {
+  background: var(--surface-2);
+}
+
+.kb-card[data-lifted='true'] {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+  cursor: grabbing;
+}
+
+.kb-card[data-dragging='true'] {
+  opacity: 0.5;
+}
+
+.kb-empty {
+  padding: 16px 12px;
+  color: var(--text-muted); /* 5.48:1 di atas --surface-3 */
+  text-align: center;
+}
+
+/* Papan kanban di mobile jadi carousel snap mendatar per tahap, satu kolom
+   85vw (DESIGN.md 5.4, R48). */
+@media (max-width: 768px) {
+  .kanban {
+    scroll-snap-type: x mandatory;
+    margin: 0 -16px;
+    padding: 0 16px 8px;
+  }
+
+  .kb-col {
+    flex: 0 0 85vw;
+    width: 85vw;
+    scroll-snap-align: start;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   16. Snap carousel R48. Dipakai section berisi lebih dari 3 item peer di
+   mobile, misalnya baris KPI dan pilar landing.
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 768px) {
+  .snap-row {
+    display: flex !important;
+    grid-template-columns: none !important;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: 12px;
+    margin: 0 -16px;
+    padding: 0 16px 4px;
+    scrollbar-width: thin;
+    /* Sama seperti .kanban: isi wadah gulir mendatar masih ikut terhitung
+       sebagai luapan dokumen tanpa ini. Lihat catatan di .kanban. */
+    contain: paint;
+  }
+
+  .snap-row > * {
+    flex: 0 0 82vw;
+    width: 82vw;
+    scroll-snap-align: start;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   17. Daftar deskripsi, dipakai di semua halaman detail
+   -------------------------------------------------------------------------- */
+
+.dl {
+  display: grid;
+  /* 116px, bukan 140px. Di kolom samping halaman detail pada lebar 1025px,
+     card-body-nya cuma sekitar 236px, jadi label 140px menyisakan 48px untuk
+     nilainya dan email panjang meluap keluar. Terukur: /app/kontak/kon-14/
+     melapor scrollWidth 1034 lawan innerWidth 1025. */
+  grid-template-columns: minmax(0, 116px) minmax(0, 1fr);
+  gap: 10px 16px;
+  align-items: baseline;
+}
+
+.dl dt {
+  color: var(--text-muted); /* 6.67:1 */
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.dl dd {
+  color: var(--text);
+  min-width: 0;
+  /* Jaring pengaman: email, URL, dan nomor panjang tidak punya titik putus
+     alami, jadi tanpa ini mereka mendorong grid melebar walaupun tracknya
+     sudah minmax(0, 1fr). Lebih baik teksnya patah daripada halamannya
+     meluap (R19). */
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 480px) {
+  .dl {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+
+  .dl dd {
+    margin-bottom: 10px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   18. Linimasa aktivitas, dipakai di detail kontak, perusahaan, dan deal
+   -------------------------------------------------------------------------- */
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+}
+
+.tl-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.tl-item:last-child {
+  border-bottom: 0;
+}
+
+.tl-mark {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-2);
+  color: var(--text-muted);
+}
+
+.tl-mark[data-tone='danger']  { background: var(--danger-soft);  color: var(--danger-ink); }
+.tl-mark[data-tone='success'] { background: var(--success-soft); color: var(--success-ink); }
+.tl-mark[data-tone='brand']   { background: var(--brand-soft);   color: var(--brand-ink); }
+.tl-mark[data-tone='warning'] { background: var(--warning-soft); color: var(--warning-ink); }
+
+/* --------------------------------------------------------------------------
+   19. Penanda relasi antar entitas. Inti CRM: dari layar mana pun, relasi
+   Lead, Kontak, Perusahaan, dan Deal harus terbaca.
+   -------------------------------------------------------------------------- */
+
+.relchip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 8px;
+  background: var(--surface-2);
+  border-left: 3px solid var(--border-strong);
+  color: var(--text);
+  font-size: 12px;
+  line-height: 18px;
+  max-width: 100%;
+}
+
+.relchip:hover {
+  background: var(--surface-3);
+  text-decoration: none;
+}
+
+.relchip[data-kind='lead']       { border-left-color: var(--accent); }
+.relchip[data-kind='kontak']     { border-left-color: var(--brand); }
+.relchip[data-kind='perusahaan'] { border-left-color: var(--info); }
+.relchip[data-kind='deal']       { border-left-color: var(--success); }
+.relchip[data-kind='penawaran']  { border-left-color: var(--warning); }
+
+/* Jejak asal konversi lead. Ini yang membuat lead terkonversi tetap bisa
+   ditelusuri dari Kontak dan dari Deal. */
+.origin-trace {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  background: var(--accent-soft);
+  color: var(--accent-ink); /* 8.26:1 */
+  border-left: 3px solid var(--accent);
+}
+
+/* --------------------------------------------------------------------------
+   20. Placeholder beranotasi Stage 3. Ini penanda kerja yang sengaja
+   ditinggalkan untuk Stage 5, bukan komponen produksi.
+   -------------------------------------------------------------------------- */
+
+.ph {
+  border: 1px dashed var(--border-strong);
+  background: var(--surface-2);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--text-muted);
+}
+
+.ph-tag {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  height: 18px;
+  padding: 0 6px;
+  background: var(--surface-3);
+  color: var(--text-muted);
+  font-size: 10px;
+  line-height: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.ph-title {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* --------------------------------------------------------------------------
+   21. Bar progres, dipakai di target lawan realisasi dan probabilitas
+   -------------------------------------------------------------------------- */
+
+.bar {
+  height: 8px;
+  background: var(--surface-3);
+  width: 100%;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  background: var(--brand);
+  transition: width var(--d-view) var(--ease);
+}
+
+.bar-fill[data-tone='success'] { background: var(--success); }
+.bar-fill[data-tone='warning'] { background: var(--warning); }
+.bar-fill[data-tone='danger']  { background: var(--danger); }
+.bar-fill[data-tone='accent']  { background: var(--accent); }
+
+/* --------------------------------------------------------------------------
+   22. Pemisah dan pembungkus kecil
+   -------------------------------------------------------------------------- */
+
+.hr {
+  height: 1px;
+  background: var(--border);
+  border: 0;
+  margin: 16px 0;
+}
+
+.chipset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}

@@ -1,0 +1,25 @@
+{
+  "name": "portfolio-jaring",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Jaring, CRM pipeline penjualan. Portfolio app by Himay Studio.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "rm -rf out .next && next build",
+    "start": "npx serve out",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "deploy": "npm run build && npx wrangler pages deploy out --project-name=himaystudio-portfolio-jaring --branch=main"
+  },
+  "dependencies": {
+    "next": "16.2.12",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.1",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^5.9.3"
+  }
+}
