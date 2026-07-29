@@ -113,7 +113,7 @@ export function BarChart({
   const garisKisi = [0, 0.25, 0.5, 0.75, 1];
 
   return (
-    <div>
+    <div data-r48="grafik">
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="chart"
@@ -209,7 +209,7 @@ export function LineChart({
       : '';
 
   return (
-    <div>
+    <div data-r48="grafik">
       <svg viewBox={`0 0 ${W} ${H}`} className="chart" aria-hidden="true" style={{ height: H }}>
         {[0, 0.25, 0.5, 0.75, 1].map((g) => {
           const y = padAtas + areaTinggi * (1 - g);

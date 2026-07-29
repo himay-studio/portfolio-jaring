@@ -3,16 +3,19 @@
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { Icon } from '@/components/Icon';
-import { Avatar, Badge, Bar, Placeholder, StatCard } from '@/components/ui/Basic';
+import { Avatar, Badge, Bar, StatCard } from '@/components/ui/Basic';
 import { DataTable, type Kolom } from '@/components/ui/DataTable';
 import { SearchInput } from '@/components/ui/Form';
 import { PageHeader, Toolbar, ToolbarSpacer, ViewPane, ViewSwitcher, useViewMode } from '@/components/ui/Nav';
+import { Modal } from '@/components/ui/Overlay';
 import { Select } from '@/components/ui/Select';
 import { LABEL_STATUS_LEAD, SUMBER_LEAD, TONE_STATUS_LEAD } from '@/data/settings';
-import { LEADS, USERS, namaSumber, namaUser } from '@/data/relations';
+import { USERS, namaSumber, namaUser } from '@/data/relations';
 import type { Lead, ViewMode } from '@/data/types';
 import { relatifHari, tanggalRingkas } from '@/lib/format';
 import { umurHari } from '@/data/clock';
+import { useDisclosure } from '@/lib/hooks';
+import { useLeadStore } from '@/lib/leadStore';
 import { leadAktif } from '@/lib/metrics';
 
 /* ==========================================================================
@@ -38,16 +41,18 @@ function toneSkor(skor: number) {
 }
 
 export default function HalamanLeads() {
+  const { leads, tandaiDihubungiMassal, ubahOwnerMassal } = useLeadStore();
   const [view, setView] = useViewMode('leads', VIEW);
   const [cari, setCari] = useState('');
   const [status, setStatus] = useState('semua');
   const [sumber, setSumber] = useState('semua');
   const [owner, setOwner] = useState('semua');
   const [terpilih, setTerpilih] = useState<Set<string>>(new Set());
+  const panelOwnerMassal = useDisclosure();
 
   const tersaring = useMemo(
     () =>
-      LEADS.filter((l) => {
+      leads.filter((l) => {
         if (status !== 'semua' && l.status !== status) return false;
         if (sumber !== 'semua' && l.sumber !== sumber) return false;
         if (owner !== 'semua' && l.ownerId !== owner) return false;
@@ -59,12 +64,12 @@ export default function HalamanLeads() {
           l.email.toLowerCase().includes(kata)
         );
       }),
-    [cari, status, sumber, owner],
+    [leads, cari, status, sumber, owner],
   );
 
-  const belumDihubungi = LEADS.filter((l) => l.kontakTerakhir === null && leadAktif(l));
-  const terkualifikasi = LEADS.filter((l) => l.status === 'terkualifikasi');
-  const dikonversi = LEADS.filter((l) => l.status === 'dikonversi');
+  const belumDihubungi = leads.filter((l) => l.kontakTerakhir === null && leadAktif(l));
+  const terkualifikasi = leads.filter((l) => l.status === 'terkualifikasi');
+  const dikonversi = leads.filter((l) => l.status === 'dikonversi');
 
   const kolom: Kolom<Lead>[] = [
     {
@@ -155,7 +160,7 @@ export default function HalamanLeads() {
       />
 
       <div className="grid grid-kpi snap-row">
-        <StatCard label="Total lead" nilai={`${LEADS.length}`} keterangan="Semua status" />
+        <StatCard label="Total lead" nilai={`${leads.length}`} keterangan="Semua status" />
         <StatCard
           label="Belum dihubungi"
           nilai={`${belumDihubungi.length}`}
@@ -233,10 +238,17 @@ export default function HalamanLeads() {
                 onUbah: setTerpilih,
                 aksiMassal: () => (
                   <>
-                    <button type="button" className="btn btn-secondary btn-sm">
+                    <button type="button" className="btn btn-secondary btn-sm" onClick={panelOwnerMassal.buka}>
                       Ubah penanggung jawab
                     </button>
-                    <button type="button" className="btn btn-secondary btn-sm">
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => {
+                        tandaiDihubungiMassal([...terpilih]);
+                        setTerpilih(new Set());
+                      }}
+                    >
                       Tandai dihubungi
                     </button>
                   </>
@@ -248,7 +260,7 @@ export default function HalamanLeads() {
               }}
               kaki={
                 <span>
-                  {tersaring.length} lead dari {LEADS.length}
+                  {tersaring.length} lead dari {leads.length}
                 </span>
               }
               kartu={(l) => (
@@ -315,12 +327,66 @@ export default function HalamanLeads() {
         )}
       </div>
 
-      <div className="section">
-        <Placeholder
-          judul="Alur konversi lead"
-          untuk="Stage 5 menambahkan tombol Konversi di halaman detail lead yang membuat Kontak, Perusahaan, dan Deal sekaligus, lalu mengisi lead.konversi dan asalLeadId di kedua record hasilnya. Bentuk datanya sudah lengkap di src/data/types.ts, jadi yang tersisa cuma formulir dan penulisan ke localStorage."
-        />
-      </div>
+      <ModalOwnerMassal
+        panel={panelOwnerMassal}
+        jumlah={terpilih.size}
+        onSimpan={(ownerId) => {
+          ubahOwnerMassal([...terpilih], ownerId);
+          setTerpilih(new Set());
+        }}
+      />
+
+      <p className="t-xs muted" style={{ marginTop: 16 }}>
+        Konversi jadi kontak dan deal dikerjakan dari halaman detail tiap lead.
+      </p>
     </>
+  );
+}
+
+function ModalOwnerMassal({
+  panel,
+  jumlah,
+  onSimpan,
+}: {
+  panel: ReturnType<typeof useDisclosure>;
+  jumlah: number;
+  onSimpan: (ownerId: string) => void;
+}) {
+  const [ownerId, setOwnerId] = useState('');
+  return (
+    <Modal
+      panel={panel}
+      judul="Ubah penanggung jawab"
+      keterangan={`Berlaku untuk ${jumlah} lead terpilih.`}
+      footer={
+        <>
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={!ownerId}
+            onClick={() => {
+              onSimpan(ownerId);
+              setOwnerId('');
+              panel.tutup();
+            }}
+          >
+            Terapkan
+          </button>
+          <button type="button" className="btn btn-secondary" onClick={panel.tutup}>
+            Batal
+          </button>
+        </>
+      }
+    >
+      <Select
+        label="Penanggung jawab baru"
+        tampilkanLabel
+        placeholder="Pilih orang"
+        nilai={ownerId}
+        onUbah={setOwnerId}
+        lebar="100%"
+        opsi={USERS.map((u) => ({ nilai: u.id, label: u.nama, keterangan: u.jabatan }))}
+      />
+    </Modal>
   );
 }

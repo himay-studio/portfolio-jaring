@@ -3,22 +3,17 @@
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { Icon } from '@/components/Icon';
-import { Avatar, Badge, EmptyState, Placeholder, StatCard } from '@/components/ui/Basic';
-import { SearchInput } from '@/components/ui/Form';
+import { ActivityFormModal } from '@/components/activity/ActivityFormModal';
+import { Avatar, Badge, EmptyState, StatCard } from '@/components/ui/Basic';
+import { Checkbox, SearchInput } from '@/components/ui/Form';
 import { PageHeader, Toolbar, ToolbarSpacer, ViewPane, ViewSwitcher, useViewMode } from '@/components/ui/Nav';
 import { Select } from '@/components/ui/Select';
 import { HARI_INI, umurHari } from '@/data/clock';
-import {
-  ACTIVITIES,
-  USERS,
-  getContact,
-  getDeal,
-  getLead,
-  namaCompany,
-  namaUser,
-} from '@/data/relations';
+import { USERS, getContact, getDeal, getLead, namaCompany, namaUser } from '@/data/relations';
 import { LABEL_JENIS_AKTIVITAS, TONE_JENIS_AKTIVITAS } from '@/data/settings';
 import type { Activity, JenisAktivitas, Tone, ViewMode } from '@/data/types';
+import { useActivityStore } from '@/lib/activityStore';
+import { useDisclosure } from '@/lib/hooks';
 import {
   HARI_PENDEK,
   jam,
@@ -88,6 +83,7 @@ function tautanRelasi(a: Activity): { label: string; href: string } | null {
 }
 
 export default function HalamanAktivitas() {
+  const { activities, tandaiSelesai, catatAktivitas } = useActivityStore();
   const [view, setView] = useViewMode('aktivitas', VIEW);
   const [cari, setCari] = useState('');
   const [jenis, setJenis] = useState('semua');
@@ -95,10 +91,11 @@ export default function HalamanAktivitas() {
   const [status, setStatus] = useState('semua');
   const [rentang, setRentang] = useState<'bulan' | 'minggu'>('bulan');
   const [jangkar, setJangkar] = useState(HARI_INI);
+  const panelCatat = useDisclosure();
 
   const tersaring = useMemo(
     () =>
-      ACTIVITIES.filter((a) => {
+      activities.filter((a) => {
         if (jenis !== 'semua' && a.jenis !== jenis) return false;
         if (owner !== 'semua' && a.ownerId !== owner) return false;
         if (status === 'selesai' && !a.selesai) return false;
@@ -113,7 +110,7 @@ export default function HalamanAktivitas() {
           (tautanRelasi(a)?.label.toLowerCase().includes(kata) ?? false)
         );
       }),
-    [cari, jenis, owner, status],
+    [activities, cari, jenis, owner, status],
   );
 
   const hariIni = tersaring.filter((a) => a.mulai.slice(0, 10) === HARI_INI);
@@ -143,16 +140,23 @@ export default function HalamanAktivitas() {
         keterangan="Telepon, meeting, email, dan tugas follow up. Yang jatuh tempo hari ini muncul paling atas."
         aksi={
           <>
-            <button type="button" className="btn btn-primary">
+            <button type="button" className="btn btn-primary" onClick={panelCatat.buka}>
               <Icon name="plus" size={16} />
               Catat aktivitas
-            </button>
-            <button type="button" className="btn btn-secondary">
-              Jadwalkan follow up
             </button>
           </>
         }
       />
+
+      {terlambat.length > 0 && (
+        <div className="origin-trace" style={{ background: 'var(--danger-soft)', color: 'var(--danger-ink)', borderLeftColor: 'var(--danger)' }}>
+          <Icon name="peringatan" size={16} />
+          <span className="t-body">
+            {terlambat.length} aktivitas terlambat, sudah lewat tanggal dan belum ditandai selesai.
+            Tandai selesai dari daftar di bawah atau buka satu per satu.
+          </span>
+        </div>
+      )}
 
       <div className="grid grid-kpi snap-row">
         <StatCard label="Total aktivitas" nilai={`${tersaring.length}`} keterangan="Sesuai penyaring" />
@@ -407,6 +411,12 @@ export default function HalamanAktivitas() {
                         const st = statusAktivitas(a);
                         return (
                           <li className="tl-item" key={a.id}>
+                            <Checkbox
+                              checked={a.selesai}
+                              onUbah={(v) => tandaiSelesai(a.id, v)}
+                              label={`Tandai selesai: ${a.judul}`}
+                              sembunyikanLabel
+                            />
                             <span className="tl-mark" data-tone={toneAktivitas(a)}>
                               <Icon name={IKON_AKTIVITAS[a.jenis]} size={15} />
                             </span>
@@ -440,12 +450,7 @@ export default function HalamanAktivitas() {
         )}
       </div>
 
-      <div className="section">
-        <Placeholder
-          judul="Formulir catat aktivitas dan penanda selesai"
-          untuk="Stage 5 menyambungkan tombol Catat aktivitas ke modal yang memakai Select untuk jenis, DatePicker untuk tanggal, dan menulis hasilnya ke localStorage. Termasuk kotak centang selesai langsung dari daftar, dan pengingat jatuh tempo."
-        />
-      </div>
+      <ActivityFormModal panel={panelCatat} relasiDasar={{}} onSimpan={catatAktivitas} />
     </>
   );
 }

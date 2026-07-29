@@ -33,7 +33,7 @@ export const nilaiTotal = (deals: Deal[]) => deals.reduce((s, d) => s + d.nilai,
 export const nilaiTertimbang = (deals: Deal[]) =>
   Math.round(deals.reduce((s, d) => s + (d.nilai * d.probabilitas) / 100, 0));
 
-export const pipelineBerjalan = () => DEALS.filter(dealBerjalan);
+export const pipelineBerjalan = (deals: Deal[] = DEALS) => deals.filter(dealBerjalan);
 
 /** Deal per tahap, urut sesuai urutan pipeline. Dipakai kanban dan laporan. */
 export function dealPerTahap(deals: Deal[] = DEALS): Record<TahapId, Deal[]> {
@@ -48,11 +48,11 @@ const dalamBulan = (iso: string | undefined, ym: string) =>
 
 export const bulanBerjalan = HARI_INI.slice(0, 7);
 
-export const dealMenangBulan = (ym: string = bulanBerjalan) =>
-  DEALS.filter((d) => d.tahap === 'menang' && dalamBulan(d.ditutupPada, ym));
+export const dealMenangBulan = (ym: string = bulanBerjalan, deals: Deal[] = DEALS) =>
+  deals.filter((d) => d.tahap === 'menang' && dalamBulan(d.ditutupPada, ym));
 
-export const dealKalahBulan = (ym: string = bulanBerjalan) =>
-  DEALS.filter((d) => d.tahap === 'kalah' && dalamBulan(d.ditutupPada, ym));
+export const dealKalahBulan = (ym: string = bulanBerjalan, deals: Deal[] = DEALS) =>
+  deals.filter((d) => d.tahap === 'kalah' && dalamBulan(d.ditutupPada, ym));
 
 /* -------------------------------------------------------------------------
    Target lawan realisasi
@@ -68,9 +68,9 @@ export interface CapaianSales {
   nilaiPipeline: number;
 }
 
-export function capaianPerSales(ym: string = bulanBerjalan): CapaianSales[] {
-  const menang = dealMenangBulan(ym);
-  const kalah = dealKalahBulan(ym);
+export function capaianPerSales(ym: string = bulanBerjalan, deals: Deal[] = DEALS): CapaianSales[] {
+  const menang = dealMenangBulan(ym, deals);
+  const kalah = dealKalahBulan(ym, deals);
   return USERS.filter((u) => u.targetBulanan > 0)
     .map((user) => {
       const menangSaya = menang.filter((d) => d.ownerId === user.id);
@@ -82,7 +82,7 @@ export function capaianPerSales(ym: string = bulanBerjalan): CapaianSales[] {
         persenCapaian: user.targetBulanan > 0 ? (realisasi / user.targetBulanan) * 100 : 0,
         jumlahMenang: menangSaya.length,
         jumlahKalah: kalah.filter((d) => d.ownerId === user.id).length,
-        nilaiPipeline: nilaiTotal(pipelineBerjalan().filter((d) => d.ownerId === user.id)),
+        nilaiPipeline: nilaiTotal(pipelineBerjalan(deals).filter((d) => d.ownerId === user.id)),
       };
     })
     .sort((a, b) => b.realisasi - a.realisasi);
@@ -196,13 +196,13 @@ export interface BarisCorong {
  * tahapnya sekarang. Kalau tidak begitu, corongnya bukan corong, cuma
  * diagram batang biasa yang menyesatkan.
  */
-export function corongKonversi(): BarisCorong[] {
-  const perTahap = dealPerTahap();
+export function corongKonversi(sumberDeals: Deal[] = DEALS): BarisCorong[] {
+  const perTahap = dealPerTahap(sumberDeals);
   const urut = TAHAP_AKTIF;
 
   const kumulatif = urut.map((t, i) => {
     const tahapSetelahnya = urut.slice(i).map((x) => x.id);
-    const deals = DEALS.filter(
+    const deals = sumberDeals.filter(
       (d) =>
         tahapSetelahnya.includes(d.tahap as TahapId) ||
         // Deal yang sudah tutup pasti melewati semua tahap aktif.
@@ -234,9 +234,9 @@ export function corongKonversi(): BarisCorong[] {
 }
 
 /** Rasio menang terhadap seluruh deal yang sudah ditutup. */
-export function rasioMenang(): number {
-  const menang = DEALS.filter((d) => d.tahap === 'menang').length;
-  const kalah = DEALS.filter((d) => d.tahap === 'kalah').length;
+export function rasioMenang(deals: Deal[] = DEALS): number {
+  const menang = deals.filter((d) => d.tahap === 'menang').length;
+  const kalah = deals.filter((d) => d.tahap === 'kalah').length;
   const total = menang + kalah;
   return total > 0 ? (menang / total) * 100 : 0;
 }
@@ -247,9 +247,9 @@ export interface RingkasanAlasanKalah {
   nilai: number;
 }
 
-export function ringkasanAlasanKalah(): RingkasanAlasanKalah[] {
+export function ringkasanAlasanKalah(deals: Deal[] = DEALS): RingkasanAlasanKalah[] {
   const peta = new Map<string, RingkasanAlasanKalah>();
-  for (const d of DEALS) {
+  for (const d of deals) {
     if (d.tahap !== 'kalah' || !d.alasanKalahId) continue;
     const baris = peta.get(d.alasanKalahId) ?? { alasanId: d.alasanKalahId, jumlah: 0, nilai: 0 };
     baris.jumlah += 1;
@@ -257,4 +257,34 @@ export function ringkasanAlasanKalah(): RingkasanAlasanKalah[] {
     peta.set(d.alasanKalahId, baris);
   }
   return [...peta.values()].sort((a, b) => b.jumlah - a.jumlah);
+}
+
+/* -------------------------------------------------------------------------
+   Tren pipeline mingguan. Dipakai grafik garis dashboard.
+
+   Tanpa snapshot historis sungguhan, nilai tiap titik minggu direkonstruksi
+   dari dibuatPada dan ditutupPada: sebuah deal terhitung "berjalan" pada
+   akhir minggu W kalau sudah dibuat sebelum W dan belum ditutup sebelum W.
+   ------------------------------------------------------------------------- */
+
+export interface TitikTrenMingguan {
+  label: string;
+  nilai: number;
+}
+
+export function trenPipelineMingguan(deals: Deal[] = DEALS, jumlahMinggu = 8): TitikTrenMingguan[] {
+  const titik: TitikTrenMingguan[] = [];
+  for (let i = jumlahMinggu - 1; i >= 0; i--) {
+    const iso = new Date(Date.parse(HARI_INI) - i * 7 * 86400000).toISOString().slice(0, 10);
+    const berjalanSaatItu = deals.filter((d) => {
+      if (d.dibuatPada > iso) return false;
+      if (d.ditutupPada && d.ditutupPada <= iso) return false;
+      return true;
+    });
+    titik.push({
+      label: iso.slice(5),
+      nilai: nilaiTotal(berjalanSaatItu),
+    });
+  }
+  return titik;
 }

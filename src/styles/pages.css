@@ -548,6 +548,34 @@
   }
 }
 
+/* "Unduh PDF" pada detail penawaran memakai cetak browser (window.print()),
+   bukan pustaka PDF di sisi klien. Aturan ini yang membuat hasil cetaknya
+   cuma dokumen penawarannya sendiri, tanpa sidebar, topbar, atau tombol
+   aksi ikut tercetak. */
+@media print {
+  .sidebar,
+  .topbar,
+  .navdrawer,
+  .scrim,
+  .page-head-actions,
+  [data-print-hide='true'] {
+    display: none !important;
+  }
+
+  .main-col {
+    margin: 0 !important;
+  }
+
+  .page {
+    padding: 0 !important;
+  }
+
+  .quote-doc {
+    border: 0;
+    padding: 0;
+  }
+}
+
 /* --------------------------------------------------------------------------
    6. Pengaturan
    -------------------------------------------------------------------------- */

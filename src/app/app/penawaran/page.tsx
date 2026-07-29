@@ -3,23 +3,20 @@
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { Icon } from '@/components/Icon';
-import { Avatar, Badge, Placeholder, StatCard } from '@/components/ui/Basic';
+import { QuotationFormModal } from '@/components/penawaran/QuotationFormModal';
+import { Avatar, Badge, StatCard } from '@/components/ui/Basic';
 import { DataTable, type Kolom } from '@/components/ui/DataTable';
 import { SearchInput } from '@/components/ui/Form';
 import { PageHeader, Toolbar, ToolbarSpacer, ViewPane, ViewSwitcher, useViewMode } from '@/components/ui/Nav';
 import { Select } from '@/components/ui/Select';
 import { umurHari } from '@/data/clock';
-import {
-  QUOTATIONS,
-  USERS,
-  getContact,
-  getDeal,
-  hitungPenawaran,
-  namaCompany,
-  namaUser,
-} from '@/data/relations';
+import { USERS, getContact, getDeal, hitungPenawaran, namaCompany, namaUser } from '@/data/relations';
 import { LABEL_STATUS_PENAWARAN, TONE_STATUS_PENAWARAN } from '@/data/settings';
 import type { Quotation, ViewMode } from '@/data/types';
+import { isIdBaru } from '@/lib/crmExtras';
+import { useDealStore } from '@/lib/dealStore';
+import { useDisclosure } from '@/lib/hooks';
+import { useQuotationStore } from '@/lib/quotationStore';
 import { relatifHari, rupiah, rupiahSingkat, tanggalRingkas } from '@/lib/format';
 
 /* ==========================================================================
@@ -37,15 +34,18 @@ import { relatifHari, rupiah, rupiahSingkat, tanggalRingkas } from '@/lib/format
 const VIEW: readonly ViewMode[] = ['table', 'card'];
 
 export default function HalamanPenawaran() {
+  const { quotations, ubahStatus, buatQuotation } = useQuotationStore();
+  const { deals } = useDealStore();
   const [view, setView] = useViewMode('penawaran', VIEW);
   const [cari, setCari] = useState('');
   const [status, setStatus] = useState('semua');
   const [owner, setOwner] = useState('semua');
   const [terpilih, setTerpilih] = useState<Set<string>>(new Set());
+  const panelBuat = useDisclosure();
 
   const tersaring = useMemo(
     () =>
-      QUOTATIONS.filter((q) => {
+      quotations.filter((q) => {
         if (status !== 'semua' && q.status !== status) return false;
         if (owner !== 'semua' && q.ownerId !== owner) return false;
         if (!cari.trim()) return true;
@@ -56,12 +56,12 @@ export default function HalamanPenawaran() {
           (getDeal(q.dealId)?.nama.toLowerCase().includes(kata) ?? false)
         );
       }),
-    [cari, status, owner],
+    [quotations, cari, status, owner],
   );
 
   const totalTersaring = tersaring.reduce((s, q) => s + hitungPenawaran(q).total, 0);
-  const terkirim = QUOTATIONS.filter((q) => q.status === 'terkirim');
-  const diterima = QUOTATIONS.filter((q) => q.status === 'diterima');
+  const terkirim = quotations.filter((q) => q.status === 'terkirim');
+  const diterima = quotations.filter((q) => q.status === 'diterima');
 
   const kolom: Kolom<Quotation>[] = [
     {
@@ -154,19 +154,16 @@ export default function HalamanPenawaran() {
         keterangan="Dokumen penawaran per deal, lengkap dengan baris item, pajak, dan status kirim."
         aksi={
           <>
-            <button type="button" className="btn btn-primary">
+            <button type="button" className="btn btn-primary" onClick={panelBuat.buka}>
               <Icon name="plus" size={16} />
               Buat penawaran
             </button>
-            <Link href="/app/deals/" className="btn btn-secondary">
-              Pilih deal dulu
-            </Link>
           </>
         }
       />
 
       <div className="grid grid-kpi snap-row">
-        <StatCard label="Total penawaran" nilai={`${QUOTATIONS.length}`} />
+        <StatCard label="Total penawaran" nilai={`${quotations.length}`} />
         <StatCard
           label="Menunggu tanggapan"
           nilai={`${terkirim.length}`}
@@ -223,12 +220,19 @@ export default function HalamanPenawaran() {
               kolom={kolom}
               kunciBaris={(q) => q.id}
               labelTabel="Daftar penawaran"
-              hrefBaris={(q) => `/app/penawaran/${q.id}/`}
+              hrefBaris={(q) => (isIdBaru(q.id) ? '' : `/app/penawaran/${q.id}/`)}
               pilihan={{
                 terpilih,
                 onUbah: setTerpilih,
                 aksiMassal: () => (
-                  <button type="button" className="btn btn-secondary btn-sm">
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => {
+                      for (const id of terpilih) ubahStatus(id, 'terkirim');
+                      setTerpilih(new Set());
+                    }}
+                  >
                     Tandai terkirim
                   </button>
                 ),
@@ -241,7 +245,7 @@ export default function HalamanPenawaran() {
               kaki={
                 <>
                   <span>
-                    {tersaring.length} penawaran dari {QUOTATIONS.length}
+                    {tersaring.length} penawaran dari {quotations.length}
                   </span>
                   <span className="num">Total {rupiah(totalTersaring)}</span>
                 </>
@@ -269,13 +273,8 @@ export default function HalamanPenawaran() {
               {tersaring.map((q) => {
                 const r = hitungPenawaran(q);
                 const kontak = getContact(q.contactId);
-                return (
-                  <Link
-                    key={q.id}
-                    href={`/app/penawaran/${q.id}/`}
-                    className="entity-card"
-                    data-kind="penawaran"
-                  >
+                const isi = (
+                  <>
                     <div className="entity-card-head">
                       <span className="titled grow">
                         <span className="t-body-strong mono">{q.nomor}</span>
@@ -310,6 +309,15 @@ export default function HalamanPenawaran() {
                     </div>
 
                     {kontak && <span className="t-xs muted">Untuk {kontak.nama}</span>}
+                  </>
+                );
+                return isIdBaru(q.id) ? (
+                  <div key={q.id} className="entity-card" data-kind="penawaran">
+                    {isi}
+                  </div>
+                ) : (
+                  <Link key={q.id} href={`/app/penawaran/${q.id}/`} className="entity-card" data-kind="penawaran">
+                    {isi}
                   </Link>
                 );
               })}
@@ -318,12 +326,7 @@ export default function HalamanPenawaran() {
         )}
       </div>
 
-      <div className="section">
-        <Placeholder
-          judul="Editor baris item penawaran"
-          untuk="Stage 5 membuat editor baris item dengan stepper qty, harga satuan, diskon, dan pilihan pajak, memakai hitungPenawaran di src/data/relations.ts sebagai satu satunya sumber hitungan. Termasuk aksi kirim, terima, dan tolak yang mengubah status."
-        />
-      </div>
+      <QuotationFormModal panel={panelBuat} dealsUntukPilihan={deals} onSimpan={buatQuotation} />
     </>
   );
 }

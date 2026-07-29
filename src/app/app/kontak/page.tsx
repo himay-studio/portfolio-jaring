@@ -12,13 +12,14 @@ import {
   COMPANIES,
   CONTACTS,
   USERS,
-  dealsByContact,
-  namaCompany,
+  namaCompany as namaCompanyDasar,
   namaSumber,
   namaUser,
 } from '@/data/relations';
 import type { Contact, ViewMode } from '@/data/types';
 import { rupiahSingkat, tanggalRingkas } from '@/lib/format';
+import { isIdBaru, useCrmExtras } from '@/lib/crmExtras';
+import { useDealStore } from '@/lib/dealStore';
 import { dealBerjalan, nilaiTotal } from '@/lib/metrics';
 
 /* ==========================================================================
@@ -42,9 +43,19 @@ export default function HalamanKontak() {
   const [owner, setOwner] = useState('semua');
   const [terpilih, setTerpilih] = useState<Set<string>>(new Set());
 
+  /* Kontak hasil konversi lead di sesi ini hidup di localStorage, bukan di
+     data dasar (rute detailnya juga tidak bisa dibuat statis untuk id yang
+     lahir di browser), jadi daftar di sini menggabungkan keduanya. */
+  const { contactsBaru, companiesBaru } = useCrmExtras();
+  const { deals } = useDealStore();
+  const contacts = useMemo(() => [...CONTACTS, ...contactsBaru], [contactsBaru]);
+  const namaCompany = (companyId?: string) =>
+    companiesBaru.find((c) => c.id === companyId)?.nama ?? namaCompanyDasar(companyId);
+  const dealsByContact = (contactId: string) => deals.filter((d) => d.contactId === contactId);
+
   const tersaring = useMemo(
     () =>
-      CONTACTS.filter((k) => {
+      contacts.filter((k) => {
         if (perusahaan !== 'semua' && k.companyId !== perusahaan) return false;
         if (owner !== 'semua' && k.ownerId !== owner) return false;
         if (!cari.trim()) return true;
@@ -56,10 +67,11 @@ export default function HalamanKontak() {
           namaCompany(k.companyId).toLowerCase().includes(kata)
         );
       }),
-    [cari, perusahaan, owner],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [contacts, cari, perusahaan, owner, companiesBaru],
   );
 
-  const dariKonversi = CONTACTS.filter((k) => k.asalLeadId !== undefined);
+  const dariKonversi = contacts.filter((k) => k.asalLeadId !== undefined);
 
   const kolom: Kolom<Contact>[] = [
     {
@@ -143,10 +155,10 @@ export default function HalamanKontak() {
       />
 
       <div className="grid grid-kpi snap-row">
-        <StatCard label="Total kontak" nilai={`${CONTACTS.length}`} />
+        <StatCard label="Total kontak" nilai={`${contacts.length}`} />
         <StatCard
           label="Perusahaan terwakili"
-          nilai={`${new Set(CONTACTS.map((k) => k.companyId)).size}`}
+          nilai={`${new Set(contacts.map((k) => k.companyId)).size}`}
           tone="info"
           keterangan={`dari ${COMPANIES.length} perusahaan`}
         />
@@ -158,7 +170,7 @@ export default function HalamanKontak() {
         />
         <StatCard
           label="Punya deal berjalan"
-          nilai={`${CONTACTS.filter((k) => dealsByContact(k.id).some(dealBerjalan)).length}`}
+          nilai={`${contacts.filter((k) => dealsByContact(k.id).some(dealBerjalan)).length}`}
           tone="success"
         />
       </div>
@@ -204,7 +216,7 @@ export default function HalamanKontak() {
               kolom={kolom}
               kunciBaris={(k) => k.id}
               labelTabel="Daftar kontak"
-              hrefBaris={(k) => `/app/kontak/${k.id}/`}
+              hrefBaris={(k) => (isIdBaru(k.id) ? '' : `/app/kontak/${k.id}/`)}
               pilihan={{
                 terpilih,
                 onUbah: setTerpilih,
@@ -220,7 +232,7 @@ export default function HalamanKontak() {
               }}
               kaki={
                 <span>
-                  {tersaring.length} kontak dari {CONTACTS.length}
+                  {tersaring.length} kontak dari {contacts.length}
                 </span>
               }
               kartu={(k) => (
@@ -242,13 +254,8 @@ export default function HalamanKontak() {
             <div className="cardgrid" data-r48="koleksi-data">
               {tersaring.map((k) => {
                 const deal = dealsByContact(k.id).filter(dealBerjalan);
-                return (
-                  <Link
-                    key={k.id}
-                    href={`/app/kontak/${k.id}/`}
-                    className="entity-card"
-                    data-kind="kontak"
-                  >
+                const isi = (
+                  <>
                     <div className="entity-card-head">
                       <Avatar nama={k.nama} kunci={k.id} inisial={k.inisial} size="lg" />
                       <span className="titled grow">
@@ -281,6 +288,15 @@ export default function HalamanKontak() {
                     <span className="t-xs muted">
                       Masuk {tanggalRingkas(k.dibuatPada)} lewat {namaSumber(k.sumber)}
                     </span>
+                  </>
+                );
+                return isIdBaru(k.id) ? (
+                  <div key={k.id} className="entity-card" data-kind="kontak">
+                    {isi}
+                  </div>
+                ) : (
+                  <Link key={k.id} href={`/app/kontak/${k.id}/`} className="entity-card" data-kind="kontak">
+                    {isi}
                   </Link>
                 );
               })}

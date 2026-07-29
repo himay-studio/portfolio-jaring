@@ -58,6 +58,14 @@ export const metadata: Metadata = {
     description:
       'Demo aplikasi CRM pipeline penjualan Jaring. Kelola lead, deal, aktivitas follow up, dan laporan sales. Dibuat oleh Himay Studio.',
     url: 'https://portfolio-jaring.himaystudio.com/',
+    images: [{ url: '/og-jaring.png', width: 1200, height: 630, alt: 'Jaring, CRM pipeline penjualan' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Jaring, CRM Pipeline Penjualan. Portfolio App by Himay Studio',
+    description:
+      'Demo aplikasi CRM pipeline penjualan Jaring. Kelola lead, deal, aktivitas follow up, dan laporan sales. Dibuat oleh Himay Studio.',
+    images: ['/og-jaring.png'],
   },
 };
 

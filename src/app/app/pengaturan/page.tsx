@@ -2,21 +2,15 @@
 
 import { useState } from 'react';
 import { Icon } from '@/components/Icon';
-import { Avatar, Badge, Placeholder } from '@/components/ui/Basic';
+import { Avatar, Badge } from '@/components/ui/Basic';
 import { Checkbox, Field, Input, Toggle } from '@/components/ui/Form';
 import { PageHeader, TabPanel, Tabs } from '@/components/ui/Nav';
 import { Select } from '@/components/ui/Select';
-import {
-  ALASAN_KALAH,
-  AMBANG_MANDEK_HARI,
-  PERAN,
-  PPN_PERSEN,
-  SUMBER_LEAD,
-  TAHAP,
-} from '@/data/settings';
+import { ALASAN_KALAH, PERAN, SUMBER_LEAD, TAHAP } from '@/data/settings';
 import { USERS } from '@/data/relations';
 import type { Tone } from '@/data/types';
 import { rupiah } from '@/lib/format';
+import { useSettingsStore } from '@/lib/settingsStore';
 
 /* ==========================================================================
    Pengaturan.
@@ -49,21 +43,13 @@ const WARNA_TONE: Record<Tone, string> = {
 };
 
 export default function HalamanPengaturan() {
+  const { pengaturan, simpan, kembalikanBawaan, tersimpan } = useSettingsStore();
   const [tab, setTab] = useState('pipeline');
 
-  /* Nilai contoh untuk memperlihatkan kontrolnya hidup. Penyimpanannya
-     dikerjakan Stage 5, dan itu ditandai eksplisit di placeholder bawah. */
-  const [sumberAktif, setSumberAktif] = useState<Record<string, boolean>>(
-    Object.fromEntries(SUMBER_LEAD.map((s) => [s.id, s.aktif])),
-  );
-  const [alasanAktif, setAlasanAktif] = useState<Record<string, boolean>>(
-    Object.fromEntries(ALASAN_KALAH.map((a) => [a.id, a.aktif])),
-  );
-  const [ambangMandek, setAmbangMandek] = useState(String(AMBANG_MANDEK_HARI));
-  const [pajak, setPajak] = useState(String(PPN_PERSEN));
-  const [mataUang, setMataUang] = useState('idr');
-  const [pengingat, setPengingat] = useState(true);
-  const [ringkasanHarian, setRingkasanHarian] = useState(false);
+  /* Setiap kontrol menulis langsung ke localStorage lewat `simpan`, jadi
+     tidak ada state "belum disimpan" yang bisa hilang kalau pengunjung
+     pindah tab tanpa menekan tombol apa pun. */
+  const ubah = (patch: Partial<typeof pengaturan>) => simpan({ ...pengaturan, ...patch });
 
   return (
     <>
@@ -72,12 +58,11 @@ export default function HalamanPengaturan() {
         keterangan="Tahap pipeline, sumber lead, alasan kalah, serta pengguna dan peran."
         aksi={
           <>
-            <button type="button" className="btn btn-primary">
-              Simpan perubahan
-            </button>
-            <button type="button" className="btn btn-secondary">
-              Kembalikan bawaan
-            </button>
+            {tersimpan && (
+              <button type="button" className="btn btn-secondary" onClick={kembalikanBawaan}>
+                Kembalikan bawaan
+              </button>
+            )}
           </>
         }
       />
@@ -159,8 +144,8 @@ export default function HalamanPengaturan() {
                 </span>
                 <Toggle
                   label={`Aktifkan sumber ${s.nama}`}
-                  checked={sumberAktif[s.id]}
-                  onUbah={(v) => setSumberAktif((p) => ({ ...p, [s.id]: v }))}
+                  checked={pengaturan.sumberAktif[s.id] ?? s.aktif}
+                  onUbah={(v) => ubah({ sumberAktif: { ...pengaturan.sumberAktif, [s.id]: v } })}
                 />
                 <button type="button" className="icon-btn" aria-label={`Ubah sumber ${s.nama}`}>
                   <Icon name="pengaturan" size={16} />
@@ -195,8 +180,8 @@ export default function HalamanPengaturan() {
                 </span>
                 <Toggle
                   label={`Aktifkan alasan ${a.nama}`}
-                  checked={alasanAktif[a.id]}
-                  onUbah={(v) => setAlasanAktif((p) => ({ ...p, [a.id]: v }))}
+                  checked={pengaturan.alasanAktif[a.id] ?? a.aktif}
+                  onUbah={(v) => ubah({ alasanAktif: { ...pengaturan.alasanAktif, [a.id]: v } })}
                 />
                 <button type="button" className="icon-btn" aria-label={`Ubah alasan ${a.nama}`}>
                   <Icon name="pengaturan" size={16} />
@@ -295,8 +280,8 @@ export default function HalamanPengaturan() {
                     type="number"
                     min={1}
                     max={90}
-                    value={ambangMandek}
-                    onChange={(e) => setAmbangMandek(e.target.value)}
+                    value={pengaturan.ambangMandekHari}
+                    onChange={(e) => ubah({ ambangMandekHari: Number(e.target.value) || 1 })}
                     style={{ width: 120 }}
                   />
                   <span className="t-sm muted">hari</span>
@@ -314,8 +299,8 @@ export default function HalamanPengaturan() {
                     type="number"
                     min={0}
                     max={100}
-                    value={pajak}
-                    onChange={(e) => setPajak(e.target.value)}
+                    value={pengaturan.pajakPersen}
+                    onChange={(e) => ubah({ pajakPersen: Number(e.target.value) || 0 })}
                     style={{ width: 120 }}
                   />
                   <span className="t-sm muted">persen</span>
@@ -325,8 +310,8 @@ export default function HalamanPengaturan() {
               <Select
                 label="Mata uang"
                 tampilkanLabel
-                nilai={mataUang}
-                onUbah={setMataUang}
+                nilai={pengaturan.mataUang}
+                onUbah={(v) => ubah({ mataUang: v })}
                 lebar="100%"
                 opsi={[
                   { nilai: 'idr', label: 'Rupiah', keterangan: 'Rp, titik sebagai pemisah ribuan' },
@@ -345,8 +330,8 @@ export default function HalamanPengaturan() {
               <div className="stack gap-6">
                 <Toggle
                   label="Pengingat aktivitas jatuh tempo"
-                  checked={pengingat}
-                  onUbah={setPengingat}
+                  checked={pengaturan.pengingatAktivitas}
+                  onUbah={(v) => ubah({ pengingatAktivitas: v })}
                 />
                 <span className="t-xs muted">
                   Memberi tahu penanggung jawab pada pagi hari untuk aktivitas yang jatuh tempo hari
@@ -357,8 +342,8 @@ export default function HalamanPengaturan() {
               <div className="stack gap-6">
                 <Toggle
                   label="Ringkasan pipeline harian"
-                  checked={ringkasanHarian}
-                  onUbah={setRingkasanHarian}
+                  checked={pengaturan.ringkasanHarian}
+                  onUbah={(v) => ubah({ ringkasanHarian: v })}
                 />
                 <span className="t-xs muted">
                   Mengirim ringkasan deal mandek dan perkiraan tutup ke manajer setiap sore.
@@ -369,21 +354,19 @@ export default function HalamanPengaturan() {
 
               <div className="stack gap-10">
                 <span className="t-label muted">Kolom bawaan tabel deal</span>
-                {['Nilai', 'Probabilitas', 'Perkiraan tutup', 'Penanggung jawab'].map((k) => (
-                  <Checkbox key={k} label={k} checked onUbah={() => undefined} />
+                {Object.keys(pengaturan.kolomDeal).map((k) => (
+                  <Checkbox
+                    key={k}
+                    label={k}
+                    checked={pengaturan.kolomDeal[k]}
+                    onUbah={(v) => ubah({ kolomDeal: { ...pengaturan.kolomDeal, [k]: v } })}
+                  />
                 ))}
               </div>
             </div>
           </div>
         </div>
       </TabPanel>
-
-      <div className="section">
-        <Placeholder
-          judul="Penyimpanan pengaturan"
-          untuk="Stage 5 menyimpan pilihan di layar ini ke localStorage lewat pola yang sama dengan useDealStore, yaitu lapisan timpa di atas data dasar di src/data/settings.ts. Di Stage 3 kontrolnya sudah hidup dan bisa dipakai, tapi perubahannya belum bertahan setelah halaman dimuat ulang."
-        />
-      </div>
     </>
   );
 }

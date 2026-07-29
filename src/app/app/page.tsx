@@ -1,12 +1,15 @@
+'use client';
+
 import Link from 'next/link';
 import { Icon } from '@/components/Icon';
-import { BarChart, ChartCard, Legend, WARNA_SERI } from '@/components/charts/Charts';
-import { Avatar, Badge, Bar, EmptyState, Placeholder, StatCard } from '@/components/ui/Basic';
+import { BarChart, ChartCard, Legend, LineChart, WARNA_SERI } from '@/components/charts/Charts';
+import { Avatar, Badge, Bar, EmptyState, StatCard } from '@/components/ui/Basic';
 import { PageHeader } from '@/components/ui/Nav';
 import { HARI_INI } from '@/data/clock';
 import { getContact, namaCompany, namaUser } from '@/data/relations';
 import { LABEL_JENIS_AKTIVITAS, TAHAP, TONE_JENIS_AKTIVITAS } from '@/data/settings';
 import type { TahapId, Tone } from '@/data/types';
+import { useDealStore } from '@/lib/dealStore';
 import {
   jam,
   namaBulanTahun,
@@ -30,6 +33,7 @@ import {
   pipelineBerjalan,
   rasioMenang,
   targetTim,
+  trenPipelineMingguan,
 } from '@/lib/metrics';
 
 /* ==========================================================================
@@ -52,16 +56,18 @@ const TONE_TAHAP: Record<TahapId, Tone> = {
 };
 
 export default function Dashboard() {
-  const berjalan = pipelineBerjalan();
-  const menang = dealMenangBulan();
-  const kalah = dealKalahBulan();
+  const { deals } = useDealStore();
+  const berjalan = pipelineBerjalan(deals);
+  const menang = dealMenangBulan(bulanBerjalan, deals);
+  const kalah = dealKalahBulan(bulanBerjalan, deals);
   const realisasi = nilaiTotal(menang);
   const target = targetTim();
-  const perTahap = dealPerTahap();
+  const perTahap = dealPerTahap(deals);
   const mandek = berjalan.filter(isMandek).sort((a, b) => hariMandek(b) - hariMandek(a));
   const hariIni = aktivitasHariIni();
   const terlambat = aktivitasTerlambat();
-  const capaian = capaianPerSales();
+  const capaian = capaianPerSales(bulanBerjalan, deals);
+  const tren = trenPipelineMingguan(deals);
 
   return (
     <>
@@ -316,10 +322,12 @@ export default function Dashboard() {
       </section>
 
       <section className="section">
-        <Placeholder
-          judul="Grafik tren pipeline delapan minggu"
-          untuk="Stage 5 mengisi grafik garis nilai pipeline per minggu memakai LineChart yang sudah ada di src/components/charts/Charts.tsx, dan menyambungkan dashboard ke useDealStore supaya perubahan tahap di papan kanban ikut mengubah angka di sini. Di Stage 3 dashboard sengaja membaca data dasar saja."
-        />
+        <ChartCard
+          judul="Tren pipeline delapan minggu"
+          keterangan="Nilai deal berjalan pada akhir tiap minggu. Naik turun mengikuti perpindahan tahap di papan kanban."
+        >
+          <LineChart judul="Nilai pipeline berjalan per minggu" formatNilai={rupiahSingkat} data={tren} />
+        </ChartCard>
       </section>
     </>
   );

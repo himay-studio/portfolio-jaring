@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { BarChart, ChartCard, Funnel, HBarList, Legend, WARNA_SERI } from '@/components/charts/Charts';
-import { Avatar, Bar, Badge, Placeholder, StatCard } from '@/components/ui/Basic';
+import { Avatar, Bar, Badge, StatCard } from '@/components/ui/Basic';
 import { DateRangePicker } from '@/components/ui/DatePicker';
 import { PageHeader, TabPanel, Tabs, Toolbar, ToolbarSpacer } from '@/components/ui/Nav';
 import { Select } from '@/components/ui/Select';
@@ -10,9 +10,9 @@ import { hari } from '@/data/clock';
 import { getAlasanKalah, namaSumber } from '@/data/relations';
 import { TAHAP } from '@/data/settings';
 import type { TahapId, Tone } from '@/data/types';
+import { useDealStore } from '@/lib/dealStore';
 import { namaBulanTahun, persenSingkat, rupiah, rupiahSingkat } from '@/lib/format';
 import {
-  bulanBerjalan,
   capaianPerSales,
   corongKonversi,
   dealKalahBulan,
@@ -57,21 +57,59 @@ const TAB = [
   { id: 'kalah', label: 'Alasan kalah', icon: 'peringatan' as const },
 ];
 
+/** Geser `ym` (format YYYY-MM) mundur sejumlah bulan. */
+function ymMundur(ym: string, bulan: number): string {
+  const [y, m] = ym.split('-').map(Number);
+  const total = y * 12 + (m - 1) - bulan;
+  const yBaru = Math.floor(total / 12);
+  const mBaru = (total % 12) + 1;
+  return `${yBaru}-${String(mBaru).padStart(2, '0')}`;
+}
+
+const MUNDUR_PER_PEMBANDING: Record<string, number | null> = {
+  'bulan-lalu': 1,
+  'kuartal-lalu': 3,
+  'tahun-lalu': 12,
+  tanpa: null,
+};
+
 export default function HalamanLaporan() {
+  const { deals } = useDealStore();
   const [tab, setTab] = useState('pipeline');
   const [mulai, setMulai] = useState(hari(-30));
   const [sampai, setSampai] = useState(hari(0));
   const [pembanding, setPembanding] = useState('bulan-lalu');
 
-  const berjalan = pipelineBerjalan();
-  const corong = corongKonversi();
-  const capaian = capaianPerSales();
+  /* Deal yang DIBUAT dalam rentang tanggal terpilih. Dipakai corong, rasio
+     menang, dan ringkasan alasan kalah, supaya "periode" berarti sama untuk
+     ketiganya: apa yang masuk pipeline pada rentang itu. */
+  const dealsPeriode = useMemo(
+    () => deals.filter((d) => d.dibuatPada >= mulai && d.dibuatPada <= sampai),
+    [deals, mulai, sampai],
+  );
+
+  /* Target lawan realisasi dan capaian per sales tetap berbasis BULAN
+     (BRAND.md: target dihitung bulanan), jadi yang dipakai adalah bulan
+     dari ujung akhir rentang terpilih. */
+  const ymTerpilih = sampai.slice(0, 7);
+
+  const berjalan = pipelineBerjalan(deals);
+  const corong = corongKonversi(dealsPeriode);
+  const capaian = capaianPerSales(ymTerpilih, deals);
   const sumber = performaSumberLead();
-  const kalah = ringkasanAlasanKalah();
-  const menangBulan = dealMenangBulan();
-  const kalahBulan = dealKalahBulan();
+  const kalah = ringkasanAlasanKalah(dealsPeriode);
+  const menangBulan = dealMenangBulan(ymTerpilih, deals);
+  const kalahBulan = dealKalahBulan(ymTerpilih, deals);
   const target = targetTim();
   const realisasi = nilaiTotal(menangBulan);
+
+  const mundurPembanding = MUNDUR_PER_PEMBANDING[pembanding];
+  const ymPembanding = mundurPembanding !== null ? ymMundur(ymTerpilih, mundurPembanding) : null;
+  const realisasiPembanding = ymPembanding !== null ? nilaiTotal(dealMenangBulan(ymPembanding, deals)) : null;
+  const deltaPembanding =
+    realisasiPembanding !== null && realisasiPembanding > 0
+      ? ((realisasi - realisasiPembanding) / realisasiPembanding) * 100
+      : null;
 
   return (
     <>
@@ -116,7 +154,8 @@ export default function HalamanLaporan() {
         />
         <ToolbarSpacer />
         <span className="t-xs muted">
-          Angka di bawah dihitung dari seluruh data demo. Penyaring periode disiapkan untuk Stage 5.
+          Corong, rasio menang, dan alasan kalah mengikuti deal yang dibuat pada rentang di atas.
+          Target dan capaian tetap per bulan, memakai bulan dari ujung akhir rentang.
         </span>
       </Toolbar>
 
@@ -133,15 +172,19 @@ export default function HalamanLaporan() {
         />
         <StatCard
           label="Rasio menang"
-          nilai={persenSingkat(rasioMenang())}
+          nilai={persenSingkat(rasioMenang(dealsPeriode))}
           tone="success"
-          keterangan={`${menangBulan.length} menang lawan ${kalahBulan.length} kalah bulan ini`}
+          keterangan={`${menangBulan.length} menang lawan ${kalahBulan.length} kalah, bulan ${namaBulanTahun(ymTerpilih)}`}
         />
         <StatCard
-          label={`Capaian ${namaBulanTahun(bulanBerjalan)}`}
+          label={`Capaian ${namaBulanTahun(ymTerpilih)}`}
           nilai={persenSingkat(target > 0 ? (realisasi / target) * 100 : 0)}
           tone={realisasi >= target ? 'success' : 'warning'}
-          keterangan={`${rupiahSingkat(realisasi)} dari ${rupiahSingkat(target)}`}
+          keterangan={
+            deltaPembanding !== null
+              ? `${rupiahSingkat(realisasi)} dari ${rupiahSingkat(target)}, ${deltaPembanding >= 0 ? 'naik' : 'turun'} ${persenSingkat(Math.abs(deltaPembanding))} dari ${namaBulanTahun(ymPembanding!)}`
+              : `${rupiahSingkat(realisasi)} dari ${rupiahSingkat(target)}`
+          }
         />
       </div>
 
@@ -242,7 +285,7 @@ export default function HalamanLaporan() {
               <span className="titled">
                 <span className="t-h3">Performa per sales</span>
                 <span className="t-sm muted">
-                  Realisasi bulan {namaBulanTahun(bulanBerjalan)} lawan target masing masing
+                  Realisasi bulan {namaBulanTahun(ymTerpilih)} lawan target masing masing
                 </span>
               </span>
             </div>
@@ -364,13 +407,6 @@ export default function HalamanLaporan() {
             </div>
           </div>
         </TabPanel>
-      </div>
-
-      <div className="section">
-        <Placeholder
-          judul="Penyaring periode yang benar benar menyaring"
-          untuk="Stage 5 menyambungkan DateRangePicker dan pilihan pembanding ke fungsi di src/lib/metrics.ts, yang saat ini menerima parameter bulan tapi masih dipanggil dengan bulan berjalan. Bentuk fungsinya sudah siap, tinggal meneruskan rentangnya."
-        />
       </div>
     </>
   );

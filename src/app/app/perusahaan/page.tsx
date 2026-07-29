@@ -8,15 +8,11 @@ import { DataTable, type Kolom } from '@/components/ui/DataTable';
 import { SearchInput } from '@/components/ui/Form';
 import { PageHeader, Toolbar, ToolbarSpacer, ViewPane, ViewSwitcher, useViewMode } from '@/components/ui/Nav';
 import { Select } from '@/components/ui/Select';
-import {
-  COMPANIES,
-  USERS,
-  contactsByCompany,
-  dealsByCompany,
-  namaUser,
-} from '@/data/relations';
+import { COMPANIES, CONTACTS, USERS, namaUser } from '@/data/relations';
 import type { Company, ViewMode } from '@/data/types';
 import { angka, rupiahSingkat } from '@/lib/format';
+import { isIdBaru, useCrmExtras } from '@/lib/crmExtras';
+import { useDealStore } from '@/lib/dealStore';
 import { dealBerjalan, nilaiTotal } from '@/lib/metrics';
 
 /* ==========================================================================
@@ -43,14 +39,23 @@ export default function HalamanPerusahaan() {
   const [owner, setOwner] = useState('semua');
   const [terpilih, setTerpilih] = useState<Set<string>>(new Set());
 
+  /* Perusahaan hasil konversi lead di sesi ini hidup di localStorage, sama
+     seperti kontak hasil konversi di halaman Kontak. */
+  const { contactsBaru, companiesBaru } = useCrmExtras();
+  const { deals } = useDealStore();
+  const companies = useMemo(() => [...COMPANIES, ...companiesBaru], [companiesBaru]);
+  const contacts = useMemo(() => [...CONTACTS, ...contactsBaru], [contactsBaru]);
+  const contactsByCompany = (companyId: string) => contacts.filter((k) => k.companyId === companyId);
+  const dealsByCompany = (companyId: string) => deals.filter((d) => d.companyId === companyId);
+
   const daftarIndustri = useMemo(
-    () => [...new Set(COMPANIES.map((c) => c.industri))].sort(),
-    [],
+    () => [...new Set(companies.map((c) => c.industri))].sort(),
+    [companies],
   );
 
   const tersaring = useMemo(
     () =>
-      COMPANIES.filter((c) => {
+      companies.filter((c) => {
         if (industri !== 'semua' && c.industri !== industri) return false;
         if (owner !== 'semua' && c.ownerId !== owner) return false;
         if (!cari.trim()) return true;
@@ -61,7 +66,7 @@ export default function HalamanPerusahaan() {
           c.kota.toLowerCase().includes(kata)
         );
       }),
-    [cari, industri, owner],
+    [companies, cari, industri, owner],
   );
 
   const kolom: Kolom<Company>[] = [
@@ -159,17 +164,17 @@ export default function HalamanPerusahaan() {
       />
 
       <div className="grid grid-kpi snap-row">
-        <StatCard label="Total perusahaan" nilai={`${COMPANIES.length}`} />
+        <StatCard label="Total perusahaan" nilai={`${companies.length}`} />
         <StatCard
           label="Punya deal berjalan"
-          nilai={`${COMPANIES.filter((c) => dealsByCompany(c.id).some(dealBerjalan)).length}`}
+          nilai={`${companies.filter((c) => dealsByCompany(c.id).some(dealBerjalan)).length}`}
           tone="success"
         />
         <StatCard label="Industri berbeda" nilai={`${daftarIndustri.length}`} tone="info" />
         <StatCard
           label="Nilai berjalan"
           nilai={rupiahSingkat(
-            nilaiTotal(COMPANIES.flatMap((c) => dealsByCompany(c.id).filter(dealBerjalan))),
+            nilaiTotal(companies.flatMap((c) => dealsByCompany(c.id).filter(dealBerjalan))),
           )}
           tone="accent"
         />
@@ -216,7 +221,7 @@ export default function HalamanPerusahaan() {
               kolom={kolom}
               kunciBaris={(c) => c.id}
               labelTabel="Daftar perusahaan"
-              hrefBaris={(c) => `/app/perusahaan/${c.id}/`}
+              hrefBaris={(c) => (isIdBaru(c.id) ? '' : `/app/perusahaan/${c.id}/`)}
               pilihan={{
                 terpilih,
                 onUbah: setTerpilih,
@@ -232,7 +237,7 @@ export default function HalamanPerusahaan() {
               }}
               kaki={
                 <span>
-                  {tersaring.length} perusahaan dari {COMPANIES.length}
+                  {tersaring.length} perusahaan dari {companies.length}
                 </span>
               }
               kartu={(c) => (
@@ -258,13 +263,8 @@ export default function HalamanPerusahaan() {
               {tersaring.map((c) => {
                 const deal = dealsByCompany(c.id).filter(dealBerjalan);
                 const kontak = contactsByCompany(c.id);
-                return (
-                  <Link
-                    key={c.id}
-                    href={`/app/perusahaan/${c.id}/`}
-                    className="entity-card"
-                    data-kind="perusahaan"
-                  >
+                const isi = (
+                  <>
                     <div className="entity-card-head">
                       <Avatar nama={c.nama} kunci={c.id} size="lg" />
                       <span className="titled grow">
@@ -295,6 +295,15 @@ export default function HalamanPerusahaan() {
                       <Avatar nama={namaUser(c.ownerId)} kunci={c.ownerId} size="sm" />
                       {namaUser(c.ownerId)}
                     </span>
+                  </>
+                );
+                return isIdBaru(c.id) ? (
+                  <div key={c.id} className="entity-card" data-kind="perusahaan">
+                    {isi}
+                  </div>
+                ) : (
+                  <Link key={c.id} href={`/app/perusahaan/${c.id}/`} className="entity-card" data-kind="perusahaan">
+                    {isi}
                   </Link>
                 );
               })}
