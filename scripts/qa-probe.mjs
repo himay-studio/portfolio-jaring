@@ -1,18 +1,22 @@
 #!/usr/bin/env node
 /**
- * Probe terarah, pelengkap `qa-check.mjs`.
+ * Probe terarah, pelengkap `qa-check.mjs` (Jaring).
  *
  * `qa-check.mjs` melaporkan TEMUAN. Kalau dia melapor nol, ada dua kemungkinan
  * yang terbaca sama persis dari luar: benar benar bersih, atau sapuannya tidak
  * pernah menyentuh apa yang seharusnya diperiksa. Skrip ini menutup jarak itu
- * dengan MENCETAK ANGKA yang diukurnya, jadi kalau jumlah pemicu dropdown yang
- * ditemukan ternyata nol, itu langsung kelihatan alih alih lolos diam diam.
+ * dengan MENCETAK ANGKA yang diukurnya.
+ *
+ * Disalin polanya dari `portfolio-lekas/scripts/qa-probe.mjs` (POS), selektor
+ * dan rute diganti ke Jaring (CRM pipeline penjualan): dropdown filter
+ * `.sel-trigger` di /app/deals/, laci navigasi `.hamburger`/`.navdrawer`,
+ * dan papan Kanban `.kanban[data-r48]` yang wajib jadi carousel di mobile.
  *
  * Pemakaian: node scripts/qa-probe.mjs
  */
 
 import { createServer } from 'node:http';
-import { createReadStream, existsSync, mkdirSync, statSync } from 'node:fs';
+import { existsSync, statSync, createReadStream } from 'node:fs';
 import { dirname, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer-core';
@@ -45,8 +49,6 @@ function server() {
   });
 }
 
-const SHOT = join(AKAR, 'qa-shots');
-
 async function utama() {
   const { chrome } = siapkanBrowser();
   const srv = await server();
@@ -61,12 +63,12 @@ async function utama() {
   try {
     /* 1. Dropdown custom BENAR BENAR ada dan keadaannya sinkron (R12, R60). */
     await page.setViewport({ width: 1025, height: 900 });
-    await page.goto(`${url}/app/produk/`, { waitUntil: 'networkidle0' });
+    await page.goto(`${url}/app/deals/`, { waitUntil: 'networkidle0' });
     await new Promise((r) => setTimeout(r, 400));
 
     const bawaan = await page.evaluate(() => document.querySelectorAll('select').length);
-    const pemicu = await page.$$('[aria-haspopup]');
-    process.stdout.write(`R12  /app/produk/  select bawaan: ${bawaan} (wajib 0), pemicu dropdown custom: ${pemicu.length}\n`);
+    const pemicu = await page.$$('.sel-trigger');
+    process.stdout.write(`R12  /app/deals/  select bawaan: ${bawaan} (wajib 0), pemicu dropdown custom (.sel-trigger): ${pemicu.length}\n`);
 
     await pemicu[0].click();
     await page.mouse.move(2, 2);
@@ -95,81 +97,58 @@ async function utama() {
     }));
     process.stdout.write(`R57  setelah Escape: aria-expanded=${setelah.expanded} panel masih di DOM=${setelah.adaPanel} (wajib false)\n`);
 
-    /* 2. Laci navigasi mobile benar benar setinggi viewport (R53). */
+    /* 2. Laci navigasi mobile benar benar setinggi viewport, di-portal ke body (R53). */
     await page.setViewport({ width: 375, height: 900 });
-    await page.goto(`${url}/app/transaksi/`, { waitUntil: 'networkidle0' });
+    await page.goto(`${url}/app/deals/`, { waitUntil: 'networkidle0' });
     await new Promise((r) => setTimeout(r, 400));
-    await (await page.$('.tb-hamburger')).click();
+    await (await page.$('.hamburger')).click();
     await new Promise((r) => setTimeout(r, 400));
     const laci = await page.evaluate(() => {
-      const p = document.querySelector('.mn-panel');
+      const p = document.querySelector('.navdrawer');
       if (!p) return null;
       const r = p.getBoundingClientRect();
-      return { top: Math.round(r.top), tinggi: Math.round(r.height), kakek: p.parentElement?.parentElement?.tagName };
+      return { top: Math.round(r.top), tinggi: Math.round(r.height), induk: p.parentElement?.tagName };
     });
-    process.stdout.write(`R53  laci mobile: top=${laci?.top} tinggi=${laci?.tinggi} (viewport 900) kakek=${laci?.kakek}\n`);
+    process.stdout.write(`R53  laci mobile: top=${laci?.top} tinggi=${laci?.tinggi} (viewport 900) induk=${laci?.induk}\n`);
     await page.keyboard.press('Escape');
 
-    /* 3. Layar Kasir di 375px, wilayah gulir terpisah dan tanpa luapan halaman. */
-    await page.goto(`${url}/app/kasir/`, { waitUntil: 'networkidle0' });
+    /* 3. Kanban deals di 375px, wajib carousel horizontal, bukan tumpukan vertikal (R48). */
+    await page.goto(`${url}/app/deals/`, { waitUntil: 'networkidle0' });
     await new Promise((r) => setTimeout(r, 500));
-    const kasir = await page.evaluate(() => {
-      const grid = document.querySelector('.kasir-grid-bungkus');
-      const bar = document.querySelector('.krj-bar');
+    const kanban = await page.evaluate(() => {
+      const papan = document.querySelector('.kanban[data-r48]');
+      if (!papan) return null;
+      const cs = getComputedStyle(papan);
       return {
+        overflowX: cs.overflowX,
+        scrollSnapType: cs.scrollSnapType,
+        kolom: papan.querySelectorAll('.kb-col').length,
         scrollWidth: document.documentElement.scrollWidth,
         innerWidth: window.innerWidth,
-        gridGulirSendiri: grid ? getComputedStyle(grid).overflowY : null,
-        barTerlihat: bar ? getComputedStyle(bar).display : null,
-        ubin: document.querySelectorAll('.ubin').length,
       };
     });
-    process.stdout.write(`Kasir 375px: scrollWidth=${kasir.scrollWidth} innerWidth=${kasir.innerWidth} grid overflow-y=${kasir.gridGulirSendiri} bar keranjang=${kasir.barTerlihat} ubin=${kasir.ubin}\n`);
+    process.stdout.write(`R48  Kanban /app/deals/ @375px: overflow-x=${kanban?.overflowX} scroll-snap-type=${kanban?.scrollSnapType} kolom=${kanban?.kolom} scrollWidth=${kanban?.scrollWidth} innerWidth=${kanban?.innerWidth}\n`);
 
-    /* 4. Overlay pembayaran benar benar seukuran viewport dan di-portal. */
-    const tombolBayar = await page.$$('.krj-bar .btn-bayar');
-    if (tombolBayar[0]) {
-      await page.evaluate(() => {
-        const b = document.querySelector('.ubin');
-        if (b) b.click();
-      });
-      await new Promise((r) => setTimeout(r, 300));
-      await page.evaluate(() => {
-        const b = document.querySelector('.krj-bar .btn-bayar');
-        if (b) b.click();
-      });
-      await new Promise((r) => setTimeout(r, 400));
-      const ov = await page.evaluate(() => {
-        const o = document.querySelector('.ov');
-        if (!o) return null;
-        const r = o.getBoundingClientRect();
-        return {
-          top: Math.round(r.top), tinggi: Math.round(r.height), lebar: Math.round(r.width),
-          induk: o.parentElement?.tagName,
-          scrollWidth: document.documentElement.scrollWidth,
-        };
-      });
-      process.stdout.write(`R53  overlay bayar: top=${ov?.top} tinggi=${ov?.tinggi} lebar=${ov?.lebar} induk=${ov?.induk} scrollWidth=${ov?.scrollWidth}\n`);
-      await page.keyboard.press('Escape');
-    }
+    /* 4. Modal Tambah deal benar benar di-portal dan seukuran viewport (R53). */
+    await page.evaluate(() => {
+      const b = [...document.querySelectorAll('button')].find((x) => x.textContent.includes('Tambah deal'));
+      b?.click();
+    });
+    await new Promise((r) => setTimeout(r, 400));
+    const modal = await page.evaluate(() => {
+      const o = document.querySelector('[role="dialog"]');
+      if (!o) return null;
+      const r = o.getBoundingClientRect();
+      return {
+        top: Math.round(r.top), tinggi: Math.round(r.height), lebar: Math.round(r.width),
+        induk: o.parentElement?.tagName,
+        scrollWidth: document.documentElement.scrollWidth,
+      };
+    });
+    process.stdout.write(`R53  modal Tambah deal: top=${modal?.top} tinggi=${modal?.tinggi} lebar=${modal?.lebar} induk=${modal?.induk} scrollWidth=${modal?.scrollWidth}\n`);
+    await page.keyboard.press('Escape');
 
-    /* 5. Tangkapan layar wajib R51, disimpan ke qa-shots/. */
-    const daftar = [
-      ['/', 'landing'], ['/login/', 'login'], ['/app/', 'beranda'], ['/app/kasir/', 'kasir'],
-      ['/app/produk/', 'produk'], ['/app/transaksi/', 'transaksi'], ['/app/laporan/', 'laporan'],
-      ['/app/shift/', 'shift'], ['/app/pengaturan/pajak/', 'pengaturan-pajak'],
-    ];
-    for (const lebar of [375, 768, 1025, 1440]) {
-      const dir = join(SHOT, String(lebar));
-      mkdirSync(dir, { recursive: true });
-      await page.setViewport({ width: lebar, height: 900 });
-      for (const [jalur, nama] of daftar) {
-        await page.goto(url + jalur, { waitUntil: 'networkidle0' });
-        await new Promise((r) => setTimeout(r, 420));
-        await page.screenshot({ path: join(dir, `${nama}.png`) });
-      }
-    }
-    process.stdout.write(`Tangkapan layar tersimpan di qa-shots/ untuk 375, 768, 1025, dan 1440.\n`);
+    process.stdout.write('Semua probe selesai.\n');
   } finally {
     await browser.close();
     srv.close();
