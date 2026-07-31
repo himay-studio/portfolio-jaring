@@ -8,6 +8,17 @@ import './globals.css';
    container (shared measurement property), no separate gtag snippet is added here. */
 const GTM_ID = 'GTM-WZJZTSKG';
 
+/* HIM-356: portfolio industry classification, emitted as `portfolio_category`
+   on the GTM dataLayer so retargeting audiences can be segmented per brand
+   category. Jaring is a horizontal B2B sales CRM (lead/deal/activity/quote
+   pipeline for any industry's sales team, per README), which does not fit
+   any of ecommerce/fashion/distributor/food-and-beverage/services/hotel (it
+   is not itself a business in one of those verticals, it is software sold
+   across verticals), so a new value "b2b-saas" is used rather than forcing
+   a bad fit. This repo has no site.ts and no Meta Pixel client component,
+   so this is a local constant like GTM_ID above. */
+const PORTFOLIO_CATEGORY: string | null = 'b2b-saas';
+
 /* ==========================================================================
    Layout root.
 
@@ -88,12 +99,15 @@ export const viewport: Viewport = {
 const SKRIP_SIDEBAR = `try{var r=localStorage.getItem('jaring.sidebar.rail');document.documentElement.dataset.sidebar=r==='1'?'rail':'penuh'}catch(e){document.documentElement.dataset.sidebar='penuh'}`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const categoryPush = PORTFOLIO_CATEGORY
+    ? `window.dataLayer=window.dataLayer||[];window.dataLayer.push({portfolio_category:${JSON.stringify(PORTFOLIO_CATEGORY)}});`
+    : '';
   return (
     <html lang="id" data-sidebar="penuh">
       <head>
         <script dangerouslySetInnerHTML={{ __html: SKRIP_SIDEBAR }} />
         <Script id="gtm-head" strategy="afterInteractive">
-          {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${GTM_ID}');`}
+          {`${categoryPush}(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${GTM_ID}');`}
         </Script>
       </head>
       <body className={`${display.variable} ${ui.variable} ${mono.variable}`}>
