@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter, JetBrains_Mono, Plus_Jakarta_Sans } from 'next/font/google';
 import Script from 'next/script';
+import { MetaPixelClient } from '@/components/MetaPixelClient';
 import './globals.css';
 
 /* R36: GTM container GTM-WZJZTSKG. Head snippet as high in <head> as Next allows, plus the
@@ -120,6 +121,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             title="Google Tag Manager"
           />
         </noscript>
+        <MetaPixelClient />
         {children}
       </body>
     </html>
