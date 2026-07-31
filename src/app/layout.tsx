@@ -1,6 +1,12 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter, JetBrains_Mono, Plus_Jakarta_Sans } from 'next/font/google';
+import Script from 'next/script';
 import './globals.css';
+
+/* R36: GTM container GTM-WZJZTSKG. Head snippet as high in <head> as Next allows, plus the
+   body <noscript> iframe immediately after the opening <body> tag. GA4 rides through this
+   container (shared measurement property), no separate gtag snippet is added here. */
+const GTM_ID = 'GTM-WZJZTSKG';
 
 /* ==========================================================================
    Layout root.
@@ -86,8 +92,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="id" data-sidebar="penuh">
       <head>
         <script dangerouslySetInnerHTML={{ __html: SKRIP_SIDEBAR }} />
+        <Script id="gtm-head" strategy="afterInteractive">
+          {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${GTM_ID}');`}
+        </Script>
       </head>
-      <body className={`${display.variable} ${ui.variable} ${mono.variable}`}>{children}</body>
+      <body className={`${display.variable} ${ui.variable} ${mono.variable}`}>
+        <noscript>
+          <iframe
+            src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
+            height="0"
+            width="0"
+            style={{ display: 'none', visibility: 'hidden' }}
+            title="Google Tag Manager"
+          />
+        </noscript>
+        {children}
+      </body>
     </html>
   );
 }
